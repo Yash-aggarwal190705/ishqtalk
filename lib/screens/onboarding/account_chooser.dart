@@ -45,7 +45,7 @@ class AccountChooser extends StatelessWidget {
           ),
         ),
         const Text(
-          'to continue to YourApp',
+          'to continue to IshqTalk',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 13, height: 1.5, color: AppColors.ink2),
         ),

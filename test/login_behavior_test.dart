@@ -348,7 +348,7 @@ void main() {
     await tapSpan(tester, 'Terms of Use');
     expect(find.byType(LegalDialog), findsOneWidget);
     expect(
-      find.textContaining('By using YourApp you agree to be respectful'),
+      find.textContaining('By using IshqTalk you agree to be respectful'),
       findsOneWidget,
     );
     await tester.tap(find.text('Close'));

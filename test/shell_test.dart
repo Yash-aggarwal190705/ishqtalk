@@ -20,7 +20,7 @@ void main() {
     (false, true, 'live'),
   ]) {
     testWidgets(
-      'splash routes to $expected at 2000ms (onboarded=$onboarded, profile=$hasProfile)',
+      'splash routes to $expected at 800ms (onboarded=$onboarded, profile=$hasProfile)',
       (tester) async {
         usePortViewport(tester);
         final app = AppContextState();
@@ -37,7 +37,7 @@ void main() {
           ),
         );
         expect(find.byType(Splash), findsOneWidget);
-        await tester.pump(const Duration(milliseconds: 1999));
+        await tester.pump(const Duration(milliseconds: 799));
         expect(nav.screen, 'splash');
         await tester.pump(const Duration(milliseconds: 1));
         expect(nav.screen, expected);

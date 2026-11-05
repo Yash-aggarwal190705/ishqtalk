@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -38,7 +39,10 @@ class _AppShellState extends State<AppShell> {
   @override
   void initState() {
     super.initState();
-    _splashTimer = Timer(const Duration(milliseconds: 2000), _advanceSplash);
+    // Minimum brand splash, capped at 800ms, running in parallel with init
+    // (there is no sequential init after it). Never gate the home screen
+    // behind a longer artificial delay.
+    _splashTimer = Timer(const Duration(milliseconds: 800), _advanceSplash);
   }
 
   void _advanceSplash() {
@@ -48,6 +52,11 @@ class _AppShellState extends State<AppShell> {
     final bool onboarded = context.read<OnboardingState>().onboarded;
     final bool hasProfile = context.read<AppContextState>().hasProfile;
     navigation.goto(onboarded || hasProfile ? 'live' : 'login');
+    if (kDebugMode || kProfileMode) {
+      debugPrint(
+        '[STARTUP] splash -> ${onboarded || hasProfile ? 'live' : 'login'}',
+      );
+    }
   }
 
   @override

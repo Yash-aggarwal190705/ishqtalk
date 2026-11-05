@@ -75,7 +75,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     ),
                     const _TopRow(
                       title: 'Notifications',
-                      subtitle: 'Welcome to YourApp! Local preview.',
+                      subtitle: 'Welcome to IshqTalk! Local preview.',
                       date: '10-24',
                       badgeCount: 1,
                       lead: _RowLead.notifications,
@@ -520,7 +520,7 @@ class NotificationsScreen extends StatelessWidget {
             ),
             const _TopRow(
               title: 'Notifications',
-              subtitle: 'Welcome to YourApp! Local preview.',
+              subtitle: 'Welcome to IshqTalk! Local preview.',
               date: '10-24',
               badgeCount: 1,
               lead: _RowLead.notifications,

@@ -26,7 +26,7 @@ void main() {
       await tester.tap(find.text('welcome-offer — Welcome Offer'));
       await tester.pump();
       expect(find.byType(WelcomeOffer), findsOneWidget);
-      await tester.pump(const Duration(milliseconds: 2000));
+      await tester.pump(const Duration(milliseconds: 900));
       expect(find.byType(WelcomeOffer), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     },

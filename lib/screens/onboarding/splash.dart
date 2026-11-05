@@ -65,7 +65,7 @@ class Splash extends StatelessWidget {
                   Logo(size: size, flameSize: 30, tailRadius: 4),
                   const SizedBox(height: 12),
                   Text(
-                    'YourApp',
+                    'IshqTalk',
                     style: TextStyle(
                       fontSize: fontSize,
                       height: 1.5,

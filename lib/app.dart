@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
       builder: (context) {
         final NavigationState navigation = context.read<NavigationState>();
         return MaterialApp(
-          title: 'YourApp',
+          title: 'IshqTalk',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.theme,
           navigatorKey: navigation.navigatorKey,

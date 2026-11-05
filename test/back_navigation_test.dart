@@ -213,7 +213,7 @@ void main() {
           child: MyApp(preferences: preferences, debugScreenPicker: false),
         ),
       );
-      await tester.pump(const Duration(milliseconds: 2000));
+      await tester.pump(const Duration(milliseconds: 800));
       await tester.pumpAndSettle();
       expect(navOf(tester).screen, 'live');
       await tester.pump(const Duration(milliseconds: 1100)); // flush tab load timers

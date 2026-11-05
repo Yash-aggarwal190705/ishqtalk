@@ -59,7 +59,7 @@ class NotifDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     const Text(
-                      'Allow YourApp to send you notifications?',
+                      'Allow IshqTalk to send you notifications?',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'Poppins',

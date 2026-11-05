@@ -322,7 +322,7 @@ class _LoginState extends State<Login> {
                                   ),
                                   const SizedBox(height: 12),
                                   const Text(
-                                    'YourApp',
+                                    'IshqTalk',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 28,

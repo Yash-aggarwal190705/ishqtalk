@@ -35,7 +35,7 @@ class LegalDialog extends StatelessWidget {
         Text(
           privacy
               ? 'Placeholder policy. This prototype stores nothing on a server. Any data you enter stays on this device and is never sent anywhere.'
-              : 'Placeholder terms. By using YourApp you agree to be respectful, to be at least 18 years old and to not share harmful content. This is a prototype and no real terms apply.',
+              : 'Placeholder terms. By using IshqTalk you agree to be respectful, to be at least 18 years old and to not share harmful content. This is a prototype and no real terms apply.',
           style: const TextStyle(
             fontSize: 14,
             height: 24 / 14,
