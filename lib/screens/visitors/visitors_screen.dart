@@ -134,7 +134,7 @@ class _VisitorRow extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  AgeChip(age: user.age, country: user.country),
+                  AgeChip(age: user.age, country: user.country, stretch: true),
                 ],
               ),
             ),

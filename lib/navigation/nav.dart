@@ -242,6 +242,10 @@ class _NavObserver extends NavigatorObserver {
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    _state._handleRoutePop(route.settings.name ?? 'live');
+    // Ignore modal routes (sheets/dialogs) — they carry no screen name and
+    // must not touch the navigation stack.
+    final String? name = route.settings.name;
+    if (name == null || !screenById.containsKey(name)) return;
+    _state._handleRoutePop(name);
   }
 }

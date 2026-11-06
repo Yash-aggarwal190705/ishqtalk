@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../foundation/app_theme.dart';
 import '../screens/explore/explore_screen.dart';
+import '../features/commerce/bonus_screen.dart';
+import '../features/commerce/package_screen.dart';
+import '../features/commerce/tokens_screen.dart';
 import '../screens/live/live_screen.dart';
 import '../screens/me/me_screen.dart';
 import '../screens/messages/messages_screen.dart';
@@ -100,6 +103,20 @@ Widget _meBuilder(BuildContext context, ScreenDef definition) =>
 
 Widget _profileBuilder(BuildContext context, ScreenDef definition) =>
     UserProfileScreen(user: context.read<NavigationState>().user);
+
+Widget _tokensBuilder(BuildContext context, ScreenDef definition) =>
+    const TokensScreen();
+
+Widget _bonusBuilder(BuildContext context, ScreenDef definition) =>
+    const BonusScreen();
+
+Widget _packageBuilder(BuildContext context, ScreenDef definition) =>
+    PackageScreen(
+      initialTab: definition.props['initialTab'] as String? ?? 'Props',
+    );
+
+Widget _historyBuilder(BuildContext context, ScreenDef definition) =>
+    HistoryScreen(empty: definition.props['empty'] == true);
 
 Widget _visitorsBuilder(BuildContext context, ScreenDef definition) =>
     VisitorsScreen(
@@ -262,39 +279,39 @@ const List<ScreenDef> screens = <ScreenDef>[
     id: 'tokens',
     label: 'Get Tokens',
     group: 'COMMERCE',
-    builder: pendingScreen,
+    builder: _tokensBuilder,
   ),
   ScreenDef(
     id: 'bonus',
     label: 'Bonus',
     group: 'COMMERCE',
-    builder: pendingScreen,
+    builder: _bonusBuilder,
   ),
   ScreenDef(
     id: 'package-props',
     label: 'Package – Props',
     group: 'COMMERCE',
-    builder: pendingScreen,
+    builder: _packageBuilder,
     props: <String, Object?>{'initialTab': 'Props'},
   ),
   ScreenDef(
     id: 'package-gift',
     label: 'Package – Gift',
     group: 'COMMERCE',
-    builder: pendingScreen,
+    builder: _packageBuilder,
     props: <String, Object?>{'initialTab': 'Gift'},
   ),
   ScreenDef(
     id: 'history-list',
     label: 'History List',
     group: 'HISTORY',
-    builder: pendingScreen,
+    builder: _historyBuilder,
   ),
   ScreenDef(
     id: 'history-empty',
     label: 'History Empty',
     group: 'HISTORY',
-    builder: pendingScreen,
+    builder: _historyBuilder,
     props: <String, Object?>{'empty': true},
   ),
   ScreenDef(

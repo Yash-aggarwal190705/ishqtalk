@@ -5,10 +5,18 @@ import '../foundation/app_theme.dart';
 import 'flag.dart';
 
 class AgeChip extends StatelessWidget {
-  const AgeChip({super.key, required this.age, this.country});
+  const AgeChip({
+    super.key,
+    required this.age,
+    this.country,
+    this.stretch = false,
+  });
 
   final int age;
   final String? country;
+
+  /// When true the chip fills its parent's width (Visitors list rows).
+  final bool stretch;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +28,7 @@ class AgeChip extends StatelessWidget {
         borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: stretch ? MainAxisSize.max : MainAxisSize.min,
         children: <Widget>[
           const AppIcon(name: 'user', size: 12, color: AppColors.primary),
           const SizedBox(width: 4),
