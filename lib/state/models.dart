@@ -139,14 +139,22 @@ class Message {
     required this.text,
     required this.state,
     required this.time,
+    this.photo,
   });
   final int id;
   final String from;
   final String text;
   final MessageState state;
   final String time;
-  Message withState(MessageState value) =>
-      Message(id: id, from: from, text: text, state: value, time: time);
+  final int? photo; // photo message id (Conversation spec)
+  Message withState(MessageState value) => Message(
+    id: id,
+    from: from,
+    text: text,
+    state: value,
+    time: time,
+    photo: photo,
+  );
 }
 
 class Conversation {
@@ -176,19 +184,61 @@ class Conversation {
   );
 }
 
+/// v2 SEED (inbox.tsx): sorted by ts desc.
 Map<int, Conversation> seededConversations() {
   final result = <int, Conversation>{};
-  for (final (id, base, name, avail, text, unread, timestamp) in [
-    (12, 4, 'Pinku', 'away', 'chat', 0, 1),
-    (10, 2, 'Camila 💕😍', 'online', 'Hola amor, cómo estás ?', 1, 2),
-    (13, 5, 'Kiara ❤️', 'online', 'Hola me da gusto saludarte ❤️', 1, 3),
-    (15, 7, '😍 Hot Queen 😍', 'unavailable', 'open call me', 1, 4),
+  // Tara's thread opens with a greeting and a photo, then the latest message.
+  result[10] = Conversation(
+    user: users[2].withIdentity(10, 'Tara', 'online'),
+    unread: 1,
+    timestamp: 6,
+    date: '10:24',
+    messages: [
+      Message(
+        id: 61,
+        from: 'them',
+        text: 'welcome to my profile, call me for talking',
+        state: MessageState.sent,
+        time: '10:20',
+      ),
+      Message(
+        id: 62,
+        from: 'them',
+        text: '',
+        photo: 3,
+        state: MessageState.sent,
+        time: '10:21',
+      ),
+      Message(
+        id: 6,
+        from: 'them',
+        text: 'That story circle was so fun 😄',
+        state: MessageState.sent,
+        time: '10:24',
+      ),
+    ],
+  );
+  for (final (id, base, name, avail, text, unread, timestamp, date) in [
+    (12, 4, 'Kabir', 'away', 'Playlist link sent!', 1, 5, '09:12'),
+    (
+      13,
+      5,
+      'Isha',
+      'online',
+      'Mock interview tomorrow at 6?',
+      1,
+      4,
+      'Yesterday',
+    ),
+    (15, 7, 'Anaya', 'away', 'Thanks for saying hi', 0, 3, '24 Oct'),
+    (16, 6, 'Dev', 'unavailable', 'Game night is on Friday', 0, 2, '22 Oct'),
+    (17, 1, 'Aarav', 'online', 'Sent you the notes', 0, 1, '20 Oct'),
   ]) {
     result[id] = Conversation(
       user: users[base].withIdentity(id, name, avail),
       unread: unread,
       timestamp: timestamp,
-      date: '10-24',
+      date: date,
       messages: [
         Message(
           id: timestamp,

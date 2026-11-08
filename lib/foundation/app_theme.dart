@@ -39,6 +39,12 @@ class AppColors {
   static const Color onlineCyan = Color(0xFF2ED3C6);
   static const Color onlineGreen = Color(0xFF3CC76A);
   static const Color lvGray = Color(0xFFC9C3D8);
+  static const Color danger = Color(0xFFD92D2D);
+  static const Color success = Color(0xFF087F5B);
+  static const Color scrim30 = Color(0x4D3B3354);
+  static const Color scrim50 = Color(0x803B3354);
+  static const Color sub = Color(0xBF3B3354); // text-ink/75
+  static const Color ink60 = Color(0x993B3354); // text-ink/60
   static const Color tintTokens = Color(0xFFFFF0DD);
   static const Color tintVip = Color(0xFFEFE6FF);
   static const Color tintInvite = Color(0xFFFFE3EA);

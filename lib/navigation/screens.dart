@@ -9,6 +9,7 @@ import '../features/commerce/tokens_screen.dart';
 import '../screens/live/live_screen.dart';
 import '../screens/me/me_screen.dart';
 import '../screens/messages/messages_screen.dart';
+import '../screens/messages/notifications_screen.dart';
 import '../screens/onboarding/login.dart';
 import '../screens/profile/user_profile_screen.dart';
 import '../screens/visitors/visitors_screen.dart';
@@ -96,7 +97,7 @@ Widget _messagesBuilder(BuildContext context, ScreenDef definition) =>
     MessagesScreen(instant: context.read<NavigationState>().instant);
 
 Widget _notificationsBuilder(BuildContext context, ScreenDef definition) =>
-    const NotificationsScreen();
+    NotificationsScreen(empty: definition.props['empty'] == true);
 
 Widget _meBuilder(BuildContext context, ScreenDef definition) =>
     MeScreen(instant: context.read<NavigationState>().instant);

@@ -20,6 +20,8 @@ const Set<String> appIconNames = <String>{
   'ghost',
   'eye',
   'bell',
+  'bellOff',
+  'headset',
   'send',
   'heart',
   'shield',
@@ -58,6 +60,9 @@ String _iconBody(String name) => switch (name) {
   'ghost' => '<path d="M5 21V11a7 7 0 0114 0v10l-3-2-2 2-2-2-2 2-2-2z" fill="currentColor"/>',
   'eye' => '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   'bell' => '<path d="M6 16V11a6 6 0 0112 0v5l2 2H4zM10 21h4"/>',
+  'bellOff' =>
+    '<path d="M6 16V11a6 6 0 0110-4.5M18 11v5l2 2H4M10 21h4M3 3l18 18"/>',
+  'headset' => '<path d="M4 14v-2a8 8 0 0116 0v2"/><rect x="3" y="14" width="4" height="6" rx="2"/><rect x="17" y="14" width="4" height="6" rx="2"/><path d="M19 20c0 1.5-2 2-5 2"/>',
   'send' => '<path d="M21 3L3 10l7 3 3 7zM10 13l11-10"/>',
   'heart' => '<path d="M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z" fill="currentColor"/>',
   'shield' => '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM8.5 12l2.5 2.5 4.5-5"/>',

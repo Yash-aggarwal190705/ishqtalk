@@ -128,6 +128,20 @@ class AppContextState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void markAllRead() {
+    for (final entry in convos.entries) {
+      if (entry.value.unread > 0) {
+        convos[entry.key] = entry.value.copyWith(unread: 0);
+      }
+    }
+    notifyListeners();
+  }
+
+  void clearConvos() {
+    convos.clear();
+    notifyListeners();
+  }
+
   void visit(int id) {
     if (visited.add(id)) notifyListeners();
   }

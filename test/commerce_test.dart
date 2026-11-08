@@ -60,7 +60,7 @@ void main() {
   group('Visitors', () {
     testWidgets('age chip stretches across the middle column', (tester) async {
       await pumpApp(tester, initialScreen: 'messages');
-      await tester.tap(find.text('Visitors'));
+      await tester.tap(find.text('Profile visitors'));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(milliseconds: 900));
       await tester.pumpAndSettle();
@@ -77,7 +77,7 @@ void main() {
       'call button opens the call sheet without opening the profile',
       (tester) async {
         await pumpApp(tester, initialScreen: 'messages');
-        await tester.tap(find.text('Visitors'));
+        await tester.tap(find.text('Profile visitors'));
         await tester.pumpAndSettle();
         await tester.pump(const Duration(milliseconds: 900));
         await tester.pumpAndSettle();

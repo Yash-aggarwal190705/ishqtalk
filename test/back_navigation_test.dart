@@ -119,7 +119,7 @@ void main() {
 
     testWidgets('Messages -> Visitors -> Profile and back', (tester) async {
       await pumpApp(tester, initialScreen: 'messages');
-      await tester.tap(find.text('Visitors'));
+      await tester.tap(find.text('Profile visitors'));
       await tester.pumpAndSettle();
       expect(find.byType(VisitorsScreen), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 900)); // visitors repo load
