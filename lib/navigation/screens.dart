@@ -6,6 +6,8 @@ import '../screens/explore/explore_screen.dart';
 import '../features/commerce/bonus_screen.dart';
 import '../features/commerce/package_screen.dart';
 import '../features/commerce/tokens_screen.dart';
+import '../features/wallet/level_screen.dart';
+import '../features/wallet/token_history_screen.dart';
 import '../screens/live/live_screen.dart';
 import '../screens/me/me_screen.dart';
 import '../screens/messages/messages_screen.dart';
@@ -118,6 +120,12 @@ Widget _packageBuilder(BuildContext context, ScreenDef definition) =>
 
 Widget _historyBuilder(BuildContext context, ScreenDef definition) =>
     HistoryScreen(empty: definition.props['empty'] == true);
+
+Widget _tokenHistoryBuilder(BuildContext context, ScreenDef definition) =>
+    const TokenHistoryScreen();
+
+Widget _levelBuilder(BuildContext context, ScreenDef definition) =>
+    const LevelScreen();
 
 Widget _visitorsBuilder(BuildContext context, ScreenDef definition) =>
     VisitorsScreen(
@@ -301,6 +309,18 @@ const List<ScreenDef> screens = <ScreenDef>[
     group: 'COMMERCE',
     builder: _packageBuilder,
     props: <String, Object?>{'initialTab': 'Gift'},
+  ),
+  ScreenDef(
+    id: 'token-history',
+    label: 'Token History',
+    group: 'HISTORY',
+    builder: _tokenHistoryBuilder,
+  ),
+  ScreenDef(
+    id: 'level',
+    label: 'Level',
+    group: 'HISTORY',
+    builder: _levelBuilder,
   ),
   ScreenDef(
     id: 'history-list',
