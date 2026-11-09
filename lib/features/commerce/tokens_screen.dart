@@ -28,10 +28,14 @@ class TokensScreen extends StatelessWidget {
                 title: 'Get Tokens',
                 onBack: navigation.back,
                 dark: true,
-                right: const AppIcon(
-                  name: 'doc',
-                  size: 24,
-                  color: AppColors.white,
+                right: AppTap(
+                  label: 'Token history',
+                  onTap: () => navigation.push('token-history'),
+                  child: const AppIcon(
+                    name: 'history',
+                    size: 24,
+                    color: AppColors.white,
+                  ),
                 ),
               ),
               SizedBox(

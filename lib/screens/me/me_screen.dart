@@ -650,15 +650,17 @@ class _MenuPanel extends StatelessWidget {
             label: 'Package',
             onTap: () => navigation.push('package-props'),
           ),
-          const _MenuRow(
+          _MenuRow(
             icon: 'diamond',
             label: 'My Level',
             trail: LvChip(level: 0, gray: true),
+            onTap: () => navigation.push('level'),
           ),
-          const _MenuRow(
+          _MenuRow(
             icon: 'dollar',
             label: 'Credits',
             trail: _CreditsTrail(),
+            onTap: () => navigation.push('token-history'),
           ),
           _MenuRow(
             icon: 'gear',

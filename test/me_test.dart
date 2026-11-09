@@ -75,4 +75,20 @@ void main() {
     nav.dispose();
     app.dispose();
   });
+
+  testWidgets('My Level and Credits rows push their screens', (tester) async {
+    final app = AppContextState();
+    final nav = NavigationState(app: app, screen: 'me');
+    await tester.pumpWidget(_fixture(app, nav));
+    await tester.pump();
+    await tester.tap(find.text('My Level'));
+    expect(nav.screen, 'level');
+    await tester.pumpAndSettle();
+    nav.back();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Credits'));
+    expect(nav.screen, 'token-history');
+    nav.dispose();
+    app.dispose();
+  });
 }
