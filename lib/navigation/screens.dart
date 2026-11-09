@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import '../foundation/app_theme.dart';
 import '../screens/explore/explore_screen.dart';
 import '../features/commerce/bonus_screen.dart';
-import '../features/commerce/package_screen.dart';
+import '../features/commerce/history_screen.dart';
 import '../features/commerce/tokens_screen.dart';
+import '../features/items/domain.dart';
+import '../features/items/expired_items_screen.dart';
+import '../features/items/my_items_screen.dart';
 import '../features/wallet/level_screen.dart';
 import '../features/wallet/token_history_screen.dart';
 import '../screens/live/live_screen.dart';
@@ -113,10 +116,13 @@ Widget _tokensBuilder(BuildContext context, ScreenDef definition) =>
 Widget _bonusBuilder(BuildContext context, ScreenDef definition) =>
     const BonusScreen();
 
-Widget _packageBuilder(BuildContext context, ScreenDef definition) =>
-    PackageScreen(
-      initialTab: definition.props['initialTab'] as String? ?? 'Props',
+Widget _myItemsBuilder(BuildContext context, ScreenDef definition) =>
+    MyItemsScreen(
+      initialTab: definition.props['initialTab'] as ItemTab? ?? ItemTab.passes,
     );
+
+Widget _expiredItemsBuilder(BuildContext context, ScreenDef definition) =>
+    ExpiredItemsScreen();
 
 Widget _historyBuilder(BuildContext context, ScreenDef definition) =>
     HistoryScreen(empty: definition.props['empty'] == true);
@@ -298,17 +304,23 @@ const List<ScreenDef> screens = <ScreenDef>[
   ),
   ScreenDef(
     id: 'package-props',
-    label: 'Package – Props',
+    label: 'My items',
     group: 'COMMERCE',
-    builder: _packageBuilder,
-    props: <String, Object?>{'initialTab': 'Props'},
+    builder: _myItemsBuilder,
+    props: <String, Object?>{'initialTab': ItemTab.passes},
   ),
   ScreenDef(
     id: 'package-gift',
-    label: 'Package – Gift',
+    label: 'My items – Gifts',
     group: 'COMMERCE',
-    builder: _packageBuilder,
-    props: <String, Object?>{'initialTab': 'Gift'},
+    builder: _myItemsBuilder,
+    props: <String, Object?>{'initialTab': ItemTab.gifts},
+  ),
+  ScreenDef(
+    id: 'expired-items',
+    label: 'Expired items',
+    group: 'COMMERCE',
+    builder: _expiredItemsBuilder,
   ),
   ScreenDef(
     id: 'token-history',

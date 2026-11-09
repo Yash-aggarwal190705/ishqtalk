@@ -10,6 +10,7 @@ import '../../shared/header.dart';
 import '../commerce/domain.dart';
 import '../commerce/repositories.dart';
 import '../commerce/widgets.dart';
+import '../wallet/domain.dart';
 
 class BonusScreen extends StatefulWidget {
   const BonusScreen({super.key, this.repository});
@@ -97,7 +98,7 @@ class _BonusScreenState extends State<BonusScreen> {
                             const Coin(size: 20),
                             const SizedBox(width: 4),
                             Text(
-                              '${_loaded ? navigation.coins : 0}',
+                              '${_loaded ? const WalletRepository().balance : 0}',
                               style: const TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 14,

@@ -30,8 +30,9 @@ class TokenRepository {
 class BonusRepository extends ChangeNotifier {
   BonusRepository();
 
-  int chatTickets = 2;
-  int matchTickets = 3;
+  // v2 data: ticket count = 3 (4 after signing in today).
+  int chatTickets = 1;
+  int matchTickets = 2;
   bool _signedInToday = false;
 
   bool get signedInToday => _signedInToday;

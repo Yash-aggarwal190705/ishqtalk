@@ -153,8 +153,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1900));
       await pumpFixed(tester);
       expect(find.text('+1 Match Ticket'), findsNothing);
-      // tickets header: chat 2 + match 3 -> 4 = 6
-      expect(find.text('6'), findsOneWidget);
+      // tickets header: chat 1 + match 2 -> 3 = 4
+      expect(find.text('4'), findsOneWidget);
 
       await tester.pumpWidget(const SizedBox.shrink());
     });
@@ -173,30 +173,38 @@ void main() {
     });
   });
 
-  group('Package', () {
-    testWidgets('tabs, props grid, item sheet; back returns', (tester) async {
+  group('My items', () {
+    testWidgets('passes list, item sheet, gifts tab; back returns', (
+      tester,
+    ) async {
       await pumpApp(tester);
       navOf(tester).push('package-props');
       await tester.pumpAndSettle();
       await tester.pump(const Duration(milliseconds: 900));
       await tester.pumpAndSettle();
-      expect(find.text('Props'), findsOneWidget);
-      expect(find.text('Gift'), findsOneWidget);
-      expect(find.text('Chat Ticket'), findsOneWidget);
-      expect(find.text('Match Ticket'), findsOneWidget);
-      expect(find.text('×2'), findsOneWidget);
+      expect(find.text('Passes'), findsOneWidget);
+      expect(find.text('Gifts'), findsOneWidget);
+      expect(find.text('Match pass × 2'), findsOneWidget);
+      expect(find.text('Chat pass × 1'), findsOneWidget);
+      expect(find.text('Active'), findsNWidgets(2));
 
-      await tester.tap(find.text('Chat Ticket'));
+      await tester.tap(find.text('Match pass × 2'));
       await tester.pumpAndSettle();
       expect(
-        find.text('Send a message to anyone you have not chatted with yet.'),
+        find.text('Skip the wait and start a video match right away.'),
         findsOneWidget,
       );
       await tester.tap(find.text('Use now'));
       await tester.pumpAndSettle();
       expect(find.text('Use now'), findsNothing);
+      expect(navOf(tester).screen, 'live');
 
-      await tester.tap(find.text('Gift'));
+      // Re-open to test the Gifts tab (after Use now we are on Live).
+      navOf(tester).push('package-props');
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 900));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Gifts'));
       await tester.pumpAndSettle();
       expect(find.text('No gifts yet'), findsOneWidget);
 
@@ -204,22 +212,18 @@ void main() {
       expect(navOf(tester).screen, 'live');
     });
 
-    testWidgets('history list and call-back sheet', (tester) async {
+    testWidgets('expired items opens from the header and back returns', (
+      tester,
+    ) async {
       await pumpApp(tester);
       navOf(tester).push('package-props');
       await tester.pumpAndSettle();
       await tester.pump(const Duration(milliseconds: 900));
       await tester.pumpAndSettle();
-      await tester.tap(find.bySemanticsLabel('Usage history'));
+      await tester.tap(find.bySemanticsLabel('Expired items'));
       await tester.pumpAndSettle();
-      expect(navOf(tester).screen, 'history-list');
-      expect(find.text('she has 🥰😘'), findsOneWidget);
-      // Semantics labels on the row buttons merge with the row text; tap the
-      // first call-back AppTap (index 0 = header Back).
-      await tester.tap(find.byType(AppTap).at(1));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Video call with'), findsOneWidget);
-      await back(tester);
+      expect(navOf(tester).screen, 'expired-items');
+      expect(find.text('Expired'), findsNWidgets(6));
       await back(tester);
       expect(navOf(tester).screen, 'package-props');
     });
