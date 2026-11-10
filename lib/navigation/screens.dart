@@ -10,6 +10,7 @@ import '../features/items/domain.dart';
 import '../features/items/expired_items_screen.dart';
 import '../features/items/my_items_screen.dart';
 import '../screens/chat/conversation_screen.dart';
+import '../screens/me/edit_profile_screen.dart';
 import '../features/wallet/level_screen.dart';
 import '../features/wallet/token_history_screen.dart';
 import '../screens/live/live_screen.dart';
@@ -140,6 +141,9 @@ Widget _chatBuilder(BuildContext context, ScreenDef definition) {
     id: navigation.chatId ?? definition.props['id'] as int? ?? 10,
   );
 }
+
+Widget _editProfileBuilder(BuildContext context, ScreenDef definition) =>
+    const EditProfileScreen();
 
 Widget _visitorsBuilder(BuildContext context, ScreenDef definition) =>
     VisitorsScreen(
@@ -373,6 +377,12 @@ const List<ScreenDef> screens = <ScreenDef>[
     group: 'OTHER',
     builder: _chatBuilder,
     props: <String, Object?>{'id': 10},
+  ),
+  ScreenDef(
+    id: 'edit-profile',
+    label: 'Edit profile',
+    group: 'OTHER',
+    builder: _editProfileBuilder,
   ),
   ScreenDef(
     id: 'settings',

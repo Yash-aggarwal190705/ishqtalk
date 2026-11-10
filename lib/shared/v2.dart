@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' show PathMetric;
 
 import 'package:flutter/material.dart';
 
@@ -364,6 +365,47 @@ class _ShimmerShift extends GradientTransform {
       Matrix4.translationValues(b.left + pos, 0, 0) *
       Matrix4.diagonal3Values(720 / b.width, 1, 1) *
       Matrix4.translationValues(-b.left, 0, 0);
+}
+
+/// Dashed rounded rectangle (Edit profile add-photo tile: 1.5px dashed
+/// #CFC8E6, radius 20).
+class DashedRRectPainter extends CustomPainter {
+  const DashedRRectPainter({
+    this.color = const Color(0xFFCFC8E6),
+    this.width = 1.5,
+    this.radius = 20,
+    this.dash = 4.5,
+    this.gap = 3,
+  });
+
+  final Color color;
+  final double width, radius, dash, gap;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Rect rect = Offset.zero & size;
+    final Path path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          rect.deflate(width / 2),
+          Radius.circular(radius - width / 2),
+        ),
+      );
+    final Paint paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width;
+    for (final PathMetric m in path.computeMetrics()) {
+      var d = 0.0;
+      while (d < m.length) {
+        canvas.drawPath(m.extractPath(d, math.min(d + dash, m.length)), paint);
+        d += dash + gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(DashedRRectPainter oldDelegate) => false;
 }
 
 class ShimmerBox extends StatelessWidget {

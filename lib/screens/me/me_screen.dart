@@ -11,7 +11,6 @@ import '../../shared/coin.dart';
 import '../../shared/flag.dart';
 import '../../shared/frog_avatar.dart';
 import '../../shared/lv_chip.dart';
-import '../../shared/sheet.dart';
 import '../../state/app_context.dart';
 import 'glass_card.dart';
 
@@ -25,21 +24,6 @@ class MeScreen extends StatefulWidget {
 }
 
 class _MeScreenState extends State<MeScreen> {
-  bool _editOpen = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // System back closes the edit-profile sheet first while on Me.
-    context.read<NavigationState>().setTabHooks(
-      'me',
-      BackHooks(
-        isBlocking: () => _editOpen,
-        onBack: () => setState(() => _editOpen = false),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final NavigationState navigation = context.read<NavigationState>();
@@ -48,39 +32,29 @@ class _MeScreenState extends State<MeScreen> {
       color: AppColors.white,
       child: SafeArea(
         top: false,
-        child: Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            SingleChildScrollView(
-              padding: EdgeInsets.only(
-                bottom: 56 + MediaQuery.paddingOf(context).bottom,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  _GradientHeader(
-                    app: app,
-                    navigation: navigation,
-                    onEdit: () => setState(() => _editOpen = true),
-                  ),
-                  _Panel(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        _CardsGrid(app: app, navigation: navigation),
-                        _MenuPanel(navigation: navigation),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (_editOpen)
-              _EditProfileSheet(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: 56 + MediaQuery.paddingOf(context).bottom,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              _GradientHeader(
                 app: app,
-                close: () => setState(() => _editOpen = false),
+                navigation: navigation,
+                onEdit: () => navigation.push('edit-profile'),
               ),
-          ],
+              _Panel(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    _CardsGrid(app: app, navigation: navigation),
+                    _MenuPanel(navigation: navigation),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -788,191 +762,6 @@ class _CreditsTrail extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // Edit profile sheet
 // ---------------------------------------------------------------------------
-
-class _EditProfileSheet extends StatefulWidget {
-  const _EditProfileSheet({required this.app, required this.close});
-
-  final AppContextState app;
-  final VoidCallback close;
-
-  @override
-  State<_EditProfileSheet> createState() => _EditProfileSheetState();
-}
-
-class _EditProfileSheetState extends State<_EditProfileSheet> {
-  late final TextEditingController _controller = TextEditingController(
-    text: widget.app.profileName,
-  );
-  final FocusNode _focus = FocusNode();
-  bool _touched = false;
-
-  String get _error {
-    final String trimmed = _controller.text.trim();
-    if (!_touched) return '';
-    if (trimmed.isEmpty) return 'Please enter a name.';
-    if (trimmed.length < 2) return 'Use at least 2 characters.';
-    return '';
-  }
-
-  bool get _valid => _controller.text.trim().length >= 2;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focus.dispose();
-    super.dispose();
-  }
-
-  void _save() {
-    setState(() => _touched = true);
-    if (!_valid) return;
-    widget.app.saveProfile(_controller.text.trim());
-    widget.close();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final Color border = _error.isNotEmpty
-        ? AppColors.badge
-        : _focus.hasFocus
-        ? AppColors.primary
-        : AppColors.divider;
-    return Sheet(
-      close: widget.close,
-      childScrolls: true,
-      avoidKeyboard: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          const Text(
-            'Edit profile',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 16,
-              height: 24 / 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.ink,
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Display name',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 14,
-              height: 20 / 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.ink,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            height: 52,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: border, width: 1),
-            ),
-            child: TextField(
-              controller: _controller,
-              focusNode: _focus,
-              maxLength: 60,
-              onChanged: (_) => setState(() {}),
-              autofillHints: const <String>[AutofillHints.nickname],
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 16,
-                color: AppColors.ink,
-              ),
-              decoration: const InputDecoration(
-                counterText: '',
-                isDense: true,
-                border: InputBorder.none,
-                hintText: 'Your name',
-                hintStyle: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16,
-                  color: AppColors.ink3,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  _error.isEmpty ? '.' : _error,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    height: 16 / 12,
-                    color: _error.isEmpty
-                        ? Colors.transparent
-                        : AppColors.badge,
-                  ),
-                ),
-              ),
-              Text(
-                '${_controller.text.length}/60',
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 12,
-                  height: 16 / 12,
-                  color: AppColors.ink3,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Container(
-            height: 48,
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.all(Radius.circular(8)),
-            ),
-            child: AppTap(
-              label: 'Save',
-              onTap: _save,
-              child: const Center(
-                child: Text(
-                  'Save',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    height: 20 / 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          SizedBox(
-            height: 44,
-            child: AppTap(
-              label: 'Cancel',
-              onTap: widget.close,
-              child: const Center(
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    height: 20 / 14,
-                    color: AppColors.ink2,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 extension on AppContextState {
   bool get vip => false; // TODO: driven by entitlements/server when they exist.

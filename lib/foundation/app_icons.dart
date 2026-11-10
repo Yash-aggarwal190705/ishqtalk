@@ -22,6 +22,7 @@ const Set<String> appIconNames = <String>{
   'bell',
   'bellOff',
   'block',
+  'copy',
   'headset',
   'send',
   'heart',
@@ -64,6 +65,7 @@ String _iconBody(String name) => switch (name) {
   'bellOff' =>
     '<path d="M6 16V11a6 6 0 0110-4.5M18 11v5l2 2H4M10 21h4M3 3l18 18"/>',
   'block' => '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>',
+  'copy' => '<rect x="8.5" y="8.5" width="11" height="12" rx="2.5"/><path d="M15.5 5.5v-.5A2 2 0 0013.5 3h-7A2 2 0 004.5 5v10a2 2 0 002 2H7"/>',
   'headset' => '<path d="M4 14v-2a8 8 0 0116 0v2"/><rect x="3" y="14" width="4" height="6" rx="2"/><rect x="17" y="14" width="4" height="6" rx="2"/><path d="M19 20c0 1.5-2 2-5 2"/>',
   'send' => '<path d="M21 3L3 10l7 3 3 7zM10 13l11-10"/>',
   'heart' => '<path d="M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z" fill="currentColor"/>',
