@@ -39,13 +39,12 @@ class _AppShellState extends State<AppShell> {
   @override
   void initState() {
     super.initState();
-    // Minimum brand splash, capped at 800ms, running in parallel with init
-    // (there is no sequential init after it). Never gate the home screen
-    // behind a longer artificial delay.
-    _splashTimer = Timer(const Duration(milliseconds: 800), _advanceSplash);
+    // The splash timer is armed in build() so a delete-account restart back
+    // to 'splash' re-arms it; the initial state is armed on first build.
   }
 
   void _advanceSplash() {
+    _splashTimer = null;
     if (!mounted) return;
     final NavigationState navigation = context.read<NavigationState>();
     if (navigation.screen != 'splash') return;
@@ -69,6 +68,11 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final NavigationState navigation = context.watch<NavigationState>();
     final AppContextState app = context.watch<AppContextState>();
+    // Arm the splash timer whenever the screen is splash (startup or delete-
+    // account restart); the one-shot timer advances to live/login.
+    if (navigation.screen == 'splash' && _splashTimer == null) {
+      _splashTimer = Timer(const Duration(milliseconds: 800), _advanceSplash);
+    }
     // Pushed routes keep the tabs mounted underneath them (state kept); only
     // genuine base screens (onboarding) replace the shell.
     final bool base = navigation.isBase;

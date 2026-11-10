@@ -64,6 +64,21 @@ class AppContextState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Delete-account reset: clears every local profile/chat cache in memory
+  /// and in preferences. Callers also reset onboarding + all preferences.
+  void clearLocal() {
+    profileName = '';
+    avatarBytes = null;
+    galleryPhotos.clear();
+    following.clear();
+    blocked.clear();
+    visited.clear();
+    convos.clear();
+    sentCount = 0;
+    _preferences?.remove(profileKey).catchError((Object _) => false);
+    notifyListeners();
+  }
+
   void toggleFollow(int id) {
     if (!following.remove(id)) following.add(id);
     notifyListeners();

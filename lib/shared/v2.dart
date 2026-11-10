@@ -137,6 +137,107 @@ class _NeoButtonState extends State<NeoButton> {
 }
 
 // ---------------------------------------------------------------------------
+// Switch (settings.tsx): button 48 tall; "On"/"Off" label 28 wide, right
+// aligned, 14/600 (On = ink, Off = ink/75), gap 8, track 48x28 (border 2,
+// radius full). On: border+fill primary, thumb soft shadow; Off: border
+// lvGray, fill card, thumb ring lvGray 1.5. Thumb 20, 4px inside the outer
+// edge (Off x 4..24, On x 24..44), animates 150 ms.
+// ---------------------------------------------------------------------------
+class AppSwitch extends StatelessWidget {
+  const AppSwitch({
+    super.key,
+    required this.on,
+    required this.onChanged,
+    required this.label,
+  });
+
+  final bool on;
+  final ValueChanged<bool> onChanged;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      toggled: on,
+      label: label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => onChanged(!on),
+        child: SizedBox(
+          height: 48,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              SizedBox(
+                width: 28,
+                child: Text(
+                  on ? 'On' : 'Off',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
+                    height: 20 / 14,
+                    fontWeight: FontWeight.w600,
+                    color: on ? AppColors.ink : AppColors.sub,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 48,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: on ? AppColors.primary : AppColors.card,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: on ? AppColors.primary : AppColors.lvGray,
+                    width: 2,
+                  ),
+                ),
+                child: Stack(
+                  children: <Widget>[
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 150),
+                      curve: Curves.easeOut,
+                      left: on ? 24 : 4,
+                      top: 4,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: on
+                              ? const <BoxShadow>[
+                                  BoxShadow(
+                                    color: Color(0x33000000),
+                                    offset: Offset(0, 2),
+                                    blurRadius: 4,
+                                  ),
+                                ]
+                              : const <BoxShadow>[
+                                  BoxShadow(
+                                    color: AppColors.lvGray,
+                                    spreadRadius: 1.5,
+                                  ),
+                                ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // ActionSheet (inbox): scrim ink@50, radius 28, padding 0/8/0/8+safe, handle
 // 40x4 with 8 below. Sheet (ui.tsx): scrim ink@30, radius 20, padding
 // 16/8/16/32+safe, handle with 16 below.

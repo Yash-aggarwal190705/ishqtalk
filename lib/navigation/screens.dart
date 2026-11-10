@@ -10,6 +10,7 @@ import '../features/items/domain.dart';
 import '../features/items/expired_items_screen.dart';
 import '../features/items/my_items_screen.dart';
 import '../screens/chat/conversation_screen.dart';
+import '../screens/me/app_settings_screen.dart';
 import '../screens/me/edit_profile_screen.dart';
 import '../features/wallet/level_screen.dart';
 import '../features/wallet/token_history_screen.dart';
@@ -144,6 +145,11 @@ Widget _chatBuilder(BuildContext context, ScreenDef definition) {
 
 Widget _editProfileBuilder(BuildContext context, ScreenDef definition) =>
     const EditProfileScreen();
+
+Widget _settingsBuilder(BuildContext context, ScreenDef definition) =>
+    AppSettingsScreen(
+      initialSheet: definition.props['initialSheet'] as String?,
+    );
 
 Widget _visitorsBuilder(BuildContext context, ScreenDef definition) =>
     VisitorsScreen(
@@ -388,7 +394,7 @@ const List<ScreenDef> screens = <ScreenDef>[
     id: 'settings',
     label: 'App Settings',
     group: 'OTHER',
-    builder: pendingScreen,
+    builder: _settingsBuilder,
   ),
 ];
 
