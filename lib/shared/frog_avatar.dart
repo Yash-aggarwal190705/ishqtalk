@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -5,10 +7,11 @@ import '../foundation/app_icons.dart';
 import '../foundation/app_theme.dart';
 
 class FrogAvatar extends StatelessWidget {
-  const FrogAvatar({super.key, this.size = 80, this.ring = 3});
+  const FrogAvatar({super.key, this.size = 80, this.ring = 3, this.image});
 
   final double size;
   final double ring;
+  final Uint8List? image;
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +29,18 @@ class FrogAvatar extends StatelessWidget {
         border: Border.all(color: AppColors.white85, width: ring),
       ),
       clipBehavior: Clip.antiAlias,
-      child: SvgPicture.string(
-        frog,
-        fit: BoxFit.cover,
-        excludeFromSemantics: true,
-      ),
+      child: image != null
+          ? Image.memory(
+              image!,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              excludeFromSemantics: true,
+            )
+          : SvgPicture.string(
+              frog,
+              fit: BoxFit.cover,
+              excludeFromSemantics: true,
+            ),
     );
   }
 }

@@ -103,7 +103,11 @@ class _GradientHeader extends StatelessWidget {
               top: 96,
               child: _Blob(size: 112, opacity: .12),
             ),
-            Positioned(left: 16, top: 60, child: FrogAvatar(size: 64, ring: 2)),
+            Positioned(
+              left: 16,
+              top: 60,
+              child: FrogAvatar(size: 64, ring: 2, image: app.avatarBytes),
+            ),
             Positioned(
               left: 92,
               top: 66,

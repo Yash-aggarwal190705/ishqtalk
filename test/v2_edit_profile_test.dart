@@ -1,12 +1,21 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ishqtalk/foundation/app_motion.dart';
 import 'package:ishqtalk/navigation/nav.dart';
 import 'package:ishqtalk/screens/me/edit_profile_screen.dart';
+import 'package:ishqtalk/screens/me/me_screen.dart';
 import 'package:ishqtalk/shared/frog_avatar.dart';
 import 'package:ishqtalk/state/app_context.dart';
 
 import 'support/port_fixture.dart';
+
+// 1x1 transparent PNG.
+final Uint8List kPng = base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -88,24 +97,26 @@ void main() {
     );
   });
 
-  testWidgets('verified chip derives from photos', (tester) async {
-    await pumpEdit(tester);
-    expect(find.text('Not verified'), findsOneWidget);
-    expect(find.text('Verified'), findsNothing);
-    await tester.pumpWidget(const SizedBox.shrink());
+  testWidgets('verified chip derives from gallery photos', (tester) async {
+    final app = AppContextState();
+    usePortViewport(tester);
     await tester.pumpWidget(
       PortFixture(
-        app: AppContextState(),
-        navigation: NavigationState(
-          app: AppContextState(),
-          screen: 'edit-profile',
-        ),
-        child: const EditProfileScreen(initialPhotos: 1),
+        app: app,
+        navigation: NavigationState(app: app, screen: 'edit-profile'),
+        child: const EditProfileScreen(),
       ),
     );
     await tester.pumpAndSettle();
+    expect(find.text('Not verified'), findsOneWidget);
+    expect(find.text('Verified'), findsNothing);
+    app.addPhoto(kPng);
+    await tester.pumpAndSettle();
     expect(find.text('Verified'), findsOneWidget);
     expect(find.text('Not verified'), findsNothing);
+    app.removePhoto(0);
+    await tester.pumpAndSettle();
+    expect(find.text('Not verified'), findsOneWidget);
   });
 
   testWidgets('rows: heights, copy button', (tester) async {
@@ -192,6 +203,96 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('12 Mar 2004'), findsNothing);
     expect(find.textContaining('2008'), findsOneWidget);
+  });
+
+  testWidgets('avatar vs gallery state is separate and persists', (
+    tester,
+  ) async {
+    final app = AppContextState();
+    app.saveProfile('Meera Sharma');
+    usePortViewport(tester);
+    Future<void> pumpEdit() => tester.pumpWidget(
+      PortFixture(
+        app: app,
+        navigation: NavigationState(app: app, screen: 'edit-profile'),
+        child: const EditProfileScreen(),
+      ),
+    );
+    await pumpEdit();
+    await tester.pumpAndSettle();
+    // Default: frog avatar, no gallery photo, not verified.
+    expect(
+      find.descendant(
+        of: find.byType(FrogAvatar),
+        matching: find.byType(Image),
+      ),
+      findsNothing,
+    );
+    expect(find.text('Not verified'), findsOneWidget);
+    // Setting an avatar (edit button callback) must not touch the gallery.
+    app.setAvatar(kPng);
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byType(FrogAvatar),
+        matching: find.byType(Image),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Add photo'), findsOneWidget); // grid empty: only Add tile
+    expect(find.text('Verified'), findsNothing);
+    // Adding a gallery photo (Add tile callback) flips verified, avatar stays.
+    app.addPhoto(kPng);
+    await tester.pumpAndSettle();
+    expect(find.text('Verified'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(FrogAvatar),
+        matching: find.byType(Image),
+      ),
+      findsOneWidget,
+    );
+    // Persistence: back + re-enter keeps both.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await pumpEdit();
+    await tester.pumpAndSettle();
+    expect(find.text('Verified'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(FrogAvatar),
+        matching: find.byType(Image),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Me screen header shows the picked avatar', (tester) async {
+    final app = AppContextState();
+    usePortViewport(tester);
+    await tester.pumpWidget(
+      PortFixture(
+        app: app,
+        navigation: NavigationState(app: app, screen: 'me'),
+        child: const MeScreen(instant: true),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byType(FrogAvatar),
+        matching: find.byType(Image),
+      ),
+      findsNothing,
+    );
+    app.setAvatar(kPng);
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byType(FrogAvatar),
+        matching: find.byType(Image),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('system back with a sheet open closes only the sheet', (

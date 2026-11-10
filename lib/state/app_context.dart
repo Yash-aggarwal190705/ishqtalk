@@ -34,10 +34,29 @@ class AppContextState extends ChangeNotifier {
   String profileName = '';
   int sentCount = 0;
   NetworkState network = NetworkState.online;
+  Uint8List? avatarBytes;
+  final List<Uint8List> galleryPhotos = <Uint8List>[];
 
   bool get hasProfile => profileName.trim().length >= 2;
   bool get offline => network == NetworkState.offline;
   int get unread => convos.values.fold(0, (sum, convo) => sum + convo.unread);
+
+  void setAvatar(Uint8List bytes) {
+    avatarBytes = bytes;
+    notifyListeners();
+  }
+
+  void addPhoto(Uint8List bytes) {
+    if (galleryPhotos.length >= 6) return;
+    galleryPhotos.add(bytes);
+    notifyListeners();
+  }
+
+  void removePhoto(int index) {
+    if (index < 0 || index >= galleryPhotos.length) return;
+    galleryPhotos.removeAt(index);
+    notifyListeners();
+  }
 
   void saveProfile(String name) {
     profileName = name;

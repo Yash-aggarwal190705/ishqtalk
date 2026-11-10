@@ -53,20 +53,16 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   late String _name;
   String _gender = 'Woman';
-  late int _photos = widget.initialPhotos;
+  int _seedPhotos = 0; // test-only placeholder tiles
   DateTime? _birthday;
   final ImagePicker _picker = ImagePicker();
-  final List<Uint8List> _pickedPhotos = <Uint8List>[];
-
-  /// Local demo logic: verified = at least one photo. TODO: real
-  /// verification must come from the backend later.
-  bool get _isVerified => _photos > 0;
 
   @override
   void initState() {
     super.initState();
     final AppContextState app = context.read<AppContextState>();
     _name = app.profileName.trim().length >= 2 ? app.profileName : kDefaultName;
+    _seedPhotos = widget.initialPhotos;
     if (widget.initialSheet != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _openSheet(widget.initialSheet!);
@@ -119,8 +115,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   /// Reusable bottom sheet: gallery / camera. Used by both the avatar edit
-  /// button and the Add photo tile.
-  Future<void> _pickPhotoSheet() {
+  /// button and the Add photo tile; [onPicked] decides where the image goes.
+  Future<void> _pickPhotoSheet(ValueChanged<Uint8List> onPicked) {
     return showAppSheet<void>(
       context,
       action: true,
@@ -129,11 +125,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         children: <Widget>[
           _pickRow(
             label: 'Choose from gallery',
-            onTap: () => _pickImage(sheetContext, ImageSource.gallery),
+            onTap: () =>
+                _pickImage(sheetContext, ImageSource.gallery, onPicked),
           ),
           _pickRow(
             label: 'Take a photo',
-            onTap: () => _pickImage(sheetContext, ImageSource.camera),
+            onTap: () => _pickImage(sheetContext, ImageSource.camera, onPicked),
           ),
           const SizedBox(height: 8),
           SizedBox(
@@ -183,7 +180,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Future<void> _pickImage(BuildContext sheetContext, ImageSource source) async {
+  Future<void> _pickImage(
+    BuildContext sheetContext,
+    ImageSource source,
+    ValueChanged<Uint8List> onPicked,
+  ) async {
     final XFile? picked;
     try {
       picked = await _picker.pickImage(source: source, maxWidth: 1200);
@@ -197,22 +198,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final Uint8List bytes = await picked.readAsBytes();
     if (!mounted || !sheetContext.mounted) return;
     Navigator.of(sheetContext).pop();
-    if (_photos >= kMaxPhotos) return;
-    setState(() {
-      _photos++;
-      _pickedPhotos.add(bytes);
-    });
+    onPicked(bytes);
+  }
+
+  void _changeAvatar(Uint8List bytes) {
+    context.read<AppContextState>().setAvatar(bytes);
+    _snack('Saved');
+  }
+
+  void _addGalleryPhoto(Uint8List bytes) {
+    context.read<AppContextState>().addPhoto(bytes);
     widget.onAddPhoto?.call();
     _snack('Saved');
   }
 
-  void _addPhoto() => _pickPhotoSheet();
-
   void _removePhoto(int index) {
-    setState(() {
-      _photos--;
-      if (index < _pickedPhotos.length) _pickedPhotos.removeAt(index);
-    });
+    context.read<AppContextState>().removePhoto(index);
     widget.onRemovePhoto?.call();
     _snack('Saved');
   }
@@ -239,6 +240,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final NavigationState navigation = context.read<NavigationState>();
+    final AppContextState app = context.watch<AppContextState>();
     return FadeIn(
       child: Material(
         color: AppColors.screen,
@@ -253,11 +255,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
-                      _avatarBlock(),
+                      _avatarBlock(app),
                       const SizedBox(height: 24),
-                      _photosSection(),
+                      _photosSection(app),
                       const SizedBox(height: 24),
-                      _verifiedCard(),
+                      _verifiedCard(app),
                       const SizedBox(height: 24),
                       _rows(),
                     ],
@@ -271,20 +273,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _avatarBlock() {
+  Widget _avatarBlock(AppContextState app) {
     return Column(
       children: <Widget>[
         const SizedBox(height: 16),
         Stack(
           clipBehavior: Clip.none,
           children: <Widget>[
-            const FrogAvatar(size: 96, ring: 3),
+            FrogAvatar(size: 96, ring: 3, image: app.avatarBytes),
             Positioned(
               right: -14,
               bottom: -14,
               child: AppTap(
                 label: 'Change avatar',
-                onTap: _pickPhotoSheet,
+                onTap: () => _pickPhotoSheet(_changeAvatar),
                 child: Container(
                   width: 48,
                   height: 48,
@@ -324,7 +326,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _photosSection() {
+  Widget _photosSection(AppContextState app) {
+    final int tiles = _seedPhotos > app.galleryPhotos.length
+        ? _seedPhotos
+        : app.galleryPhotos.length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -355,16 +360,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.only(bottom: 4),
             children: <Widget>[
-              for (int i = 0; i < _photos; i++)
+              for (int i = 0; i < tiles; i++)
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: _PhotoTile(
                     index: i,
-                    bytes: i < _pickedPhotos.length ? _pickedPhotos[i] : null,
+                    bytes: i < app.galleryPhotos.length
+                        ? app.galleryPhotos[i]
+                        : null,
                     onRemove: () => _removePhoto(i),
                   ),
                 ),
-              if (_photos < kMaxPhotos) _AddPhotoTile(onTap: _addPhoto),
+              if (tiles < kMaxPhotos)
+                _AddPhotoTile(onTap: () => _pickPhotoSheet(_addGalleryPhoto)),
             ],
           ),
         ),
@@ -372,8 +380,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _verifiedCard() {
-    final bool verified = _isVerified;
+  Widget _verifiedCard(AppContextState app) {
+    // Demo: verified when there is at least one gallery photo. TODO: real
+    // verification must come from the backend later.
+    final bool verified = app.galleryPhotos.isNotEmpty;
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 16),
