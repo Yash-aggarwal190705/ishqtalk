@@ -9,6 +9,7 @@ import '../features/commerce/tokens_screen.dart';
 import '../features/items/domain.dart';
 import '../features/items/expired_items_screen.dart';
 import '../features/items/my_items_screen.dart';
+import '../screens/chat/conversation_screen.dart';
 import '../features/wallet/level_screen.dart';
 import '../features/wallet/token_history_screen.dart';
 import '../screens/live/live_screen.dart';
@@ -132,6 +133,13 @@ Widget _tokenHistoryBuilder(BuildContext context, ScreenDef definition) =>
 
 Widget _levelBuilder(BuildContext context, ScreenDef definition) =>
     const LevelScreen();
+
+Widget _chatBuilder(BuildContext context, ScreenDef definition) {
+  final NavigationState navigation = context.read<NavigationState>();
+  return ConversationScreen(
+    id: navigation.chatId ?? definition.props['id'] as int? ?? 10,
+  );
+}
 
 Widget _visitorsBuilder(BuildContext context, ScreenDef definition) =>
     VisitorsScreen(
@@ -363,7 +371,7 @@ const List<ScreenDef> screens = <ScreenDef>[
     id: 'chat',
     label: 'Conversation',
     group: 'OTHER',
-    builder: pendingScreen,
+    builder: _chatBuilder,
     props: <String, Object?>{'id': 10},
   ),
   ScreenDef(
