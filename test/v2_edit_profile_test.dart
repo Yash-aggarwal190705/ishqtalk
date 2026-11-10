@@ -88,16 +88,27 @@ void main() {
     );
   });
 
-  testWidgets('verified card toggles on tap', (tester) async {
+  testWidgets('verified chip derives from photos', (tester) async {
     await pumpEdit(tester);
     expect(find.text('Not verified'), findsOneWidget);
-    await tester.tap(find.text('Get verified'));
-    await tester.pump();
+    expect(find.text('Verified'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpWidget(
+      PortFixture(
+        app: AppContextState(),
+        navigation: NavigationState(
+          app: AppContextState(),
+          screen: 'edit-profile',
+        ),
+        child: const EditProfileScreen(initialPhotos: 1),
+      ),
+    );
+    await tester.pumpAndSettle();
     expect(find.text('Verified'), findsOneWidget);
     expect(find.text('Not verified'), findsNothing);
   });
 
-  testWidgets('rows: heights, copy button, interests value', (tester) async {
+  testWidgets('rows: heights, copy button', (tester) async {
     await pumpEdit(tester);
     // Row heights 64, Birthday wrapper is taller.
     expect(find.text('Name'), findsOneWidget);
@@ -105,7 +116,7 @@ void main() {
     expect(find.text('12 Mar 2004'), findsOneWidget);
     expect(find.text('48213907'), findsOneWidget);
     expect(find.text('Woman'), findsOneWidget);
-    expect(find.text('Music, Tech +1'), findsOneWidget);
+    expect(find.text('Interests'), findsNothing);
     expect(find.bySemanticsLabel('Copy user ID'), findsOneWidget);
   });
 
@@ -144,13 +155,43 @@ void main() {
 
   testWidgets('interests sheet deselects Music', (tester) async {
     await pumpEdit(tester, sheet: 'interests');
-    expect(find.text('Interests'), findsNWidgets(2));
-    await tester.tap(find.text('Music'));
-    await tester.pump();
-    await tester.tap(find.text('Save changes'));
+    // Interests row was removed; the sheet must not open.
+    expect(find.text('Interests'), findsNothing);
+    expect(find.text('Music'), findsNothing);
+  });
+
+  testWidgets('change avatar and Add photo open the same pick sheet', (
+    tester,
+  ) async {
+    await pumpEdit(tester);
+    await tester.tap(find.bySemanticsLabel('Change avatar'));
     await tester.pumpAndSettle();
-    expect(find.text('Interests'), findsOneWidget); // only the row label
-    expect(find.text('Tech, Travel'), findsOneWidget);
+    expect(find.text('Choose from gallery'), findsOneWidget);
+    expect(find.text('Take a photo'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Choose from gallery'), findsNothing);
+    await tester.tap(find.text('Add photo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Choose from gallery'), findsOneWidget);
+    expect(find.text('Take a photo'), findsOneWidget);
+  });
+
+  testWidgets('birthday row opens date picker and saves formatted date', (
+    tester,
+  ) async {
+    await pumpEdit(tester);
+    expect(find.text('12 Mar 2004'), findsOneWidget);
+    await tester.tap(find.text('Birthday'));
+    await tester.pumpAndSettle();
+    expect(find.byType(DatePickerDialog), findsOneWidget);
+    // lastDate is 18 years before today (2008), so pick an early day.
+    await tester.tap(find.text('5'));
+    await tester.pump();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    expect(find.text('12 Mar 2004'), findsNothing);
+    expect(find.textContaining('2008'), findsOneWidget);
   });
 
   testWidgets('system back with a sheet open closes only the sheet', (

@@ -27,9 +27,11 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Video calls need the camera so the other person can see you.</string>
+	<string>Video calls and profile photos need the camera so the other person can see you.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Video calls need the microphone so the other person can hear you.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose a photo from your library for your profile.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

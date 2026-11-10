@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../foundation/app_icons.dart';
@@ -20,14 +22,6 @@ const List<String> kGenders = <String>[
   'Non-binary',
   'Prefer not to say',
 ];
-const List<String> kInterests = <String>[
-  'Music',
-  'Tech',
-  'Travel',
-  'Movies',
-  'Fitness',
-  'Art',
-];
 const int kMaxPhotos = 6;
 final RegExp kNameOk = RegExp(r'^[A-Za-z0-9 ]{2,24}$');
 
@@ -35,12 +29,6 @@ const String _checkSvg =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const String _warnSvg =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg>';
-
-String interestsValue(List<String> interests) {
-  if (interests.isEmpty) return 'Add interests';
-  if (interests.length <= 2) return interests.join(', ');
-  return '${interests.sublist(0, 2).join(', ')} +${interests.length - 2}';
-}
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({
@@ -65,9 +53,14 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   late String _name;
   String _gender = 'Woman';
-  List<String> _interests = <String>['Music', 'Tech', 'Travel'];
   late int _photos = widget.initialPhotos;
-  late bool _verified = widget.initialVerified;
+  DateTime? _birthday;
+  final ImagePicker _picker = ImagePicker();
+  final List<Uint8List> _pickedPhotos = <Uint8List>[];
+
+  /// Local demo logic: verified = at least one photo. TODO: real
+  /// verification must come from the backend later.
+  bool get _isVerified => _photos > 0;
 
   @override
   void initState() {
@@ -122,31 +115,120 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             },
           ),
         );
-      case 'interests':
-        showAppSheet<void>(
-          context,
-          builder: (sheetContext) => _InterestsSheet(
-            draft: _interests,
-            onSave: (List<String> value) {
-              Navigator.of(sheetContext).pop();
-              setState(() => _interests = value);
-              _snack('Saved');
-            },
-          ),
-        );
     }
   }
 
-  void _addPhoto() {
-    setState(() => _photos++);
+  /// Reusable bottom sheet: gallery / camera. Used by both the avatar edit
+  /// button and the Add photo tile.
+  Future<void> _pickPhotoSheet() {
+    return showAppSheet<void>(
+      context,
+      action: true,
+      builder: (sheetContext) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          _pickRow(
+            label: 'Choose from gallery',
+            onTap: () => _pickImage(sheetContext, ImageSource.gallery),
+          ),
+          _pickRow(
+            label: 'Take a photo',
+            onTap: () => _pickImage(sheetContext, ImageSource.camera),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 44,
+            child: AppTap(
+              onTap: () => Navigator.of(sheetContext).pop(),
+              child: const Center(
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
+                    height: 20 / 14,
+                    color: AppColors.ink2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pickRow({required String label, required VoidCallback onTap}) {
+    return SizedBox(
+      height: 56,
+      child: AppTap(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 16,
+                height: 24 / 16,
+                fontWeight: FontWeight.w500,
+                color: AppColors.ink,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(BuildContext sheetContext, ImageSource source) async {
+    final XFile? picked;
+    try {
+      picked = await _picker.pickImage(source: source, maxWidth: 1200);
+    } catch (_) {
+      // Permission denied or picker failure.
+      if (mounted) _snack('Could not access photos');
+      return;
+    }
+    if (!mounted || !sheetContext.mounted) return;
+    if (picked == null) return; // cancelled
+    final Uint8List bytes = await picked.readAsBytes();
+    if (!mounted || !sheetContext.mounted) return;
+    Navigator.of(sheetContext).pop();
+    if (_photos >= kMaxPhotos) return;
+    setState(() {
+      _photos++;
+      _pickedPhotos.add(bytes);
+    });
     widget.onAddPhoto?.call();
     _snack('Saved');
   }
 
-  void _removePhoto() {
-    setState(() => _photos--);
+  void _addPhoto() => _pickPhotoSheet();
+
+  void _removePhoto(int index) {
+    setState(() {
+      _photos--;
+      if (index < _pickedPhotos.length) _pickedPhotos.removeAt(index);
+    });
     widget.onRemovePhoto?.call();
     _snack('Saved');
+  }
+
+  Future<void> _pickBirthday() async {
+    final DateTime now = DateTime.now();
+    final DateTime today18 = DateTime(now.year - 18, now.month, now.day);
+    final DateTime initial = _birthday ?? today18;
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(1950),
+      lastDate: today18,
+    );
+    if (picked == null) return; // cancelled
+    setState(() => _birthday = picked);
   }
 
   Future<void> _copyId() async {
@@ -202,7 +284,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               bottom: -14,
               child: AppTap(
                 label: 'Change avatar',
-                onTap: () => _snack('Coming soon'),
+                onTap: _pickPhotoSheet,
                 child: Container(
                   width: 48,
                   height: 48,
@@ -276,7 +358,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               for (int i = 0; i < _photos; i++)
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
-                  child: _PhotoTile(index: i, onRemove: _removePhoto),
+                  child: _PhotoTile(
+                    index: i,
+                    bytes: i < _pickedPhotos.length ? _pickedPhotos[i] : null,
+                    onRemove: () => _removePhoto(i),
+                  ),
                 ),
               if (_photos < kMaxPhotos) _AddPhotoTile(onTap: _addPhoto),
             ],
@@ -287,100 +373,92 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _verifiedCard() {
-    return AppTap(
-      onTap: () {
-        if (!_verified) {
-          setState(() => _verified = true);
-          // TODO: real verification flow when the backend exists.
-          _snack('Saved');
-        }
-      },
-      child: Container(
-        height: 64,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: _EditProfileScreenState.cardDecoration(),
-        child: Row(
-          children: <Widget>[
-            Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                color: AppColors.onlineCyan,
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: AppIcon(name: 'shield', size: 22, color: AppColors.ink),
-              ),
+    final bool verified = _isVerified;
+    return Container(
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: _EditProfileScreenState.cardDecoration(),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: AppColors.onlineCyan,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const Text(
-                    'Get verified',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 16,
-                      height: 24 / 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.ink,
-                    ),
-                  ),
-                  const Text(
-                    'Verified profiles earn more trust',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12,
-                      height: 16 / 12,
-                      color: AppColors.sub,
-                    ),
-                  ),
-                ],
-              ),
+            child: const Center(
+              child: AppIcon(name: 'shield', size: 22, color: AppColors.ink),
             ),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: _verified ? AppColors.onlineCyan : AppColors.card,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  if (_verified)
-                    SvgPicture.string(
-                      _checkSvg,
-                      width: 12,
-                      height: 12,
-                      colorFilter: const ColorFilter.mode(
-                        AppColors.ink,
-                        BlendMode.srcIn,
-                      ),
-                      excludeFromSemantics: true,
-                    ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _verified ? 'Verified' : 'Not verified',
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 12,
-                      height: 16 / 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.ink,
-                    ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const Text(
+                  'Get verified',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    height: 24 / 16,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.ink,
                   ),
-                ],
-              ),
+                ),
+                const Text(
+                  'Verified profiles earn more trust',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    height: 16 / 12,
+                    color: AppColors.sub,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            const AppIcon(name: 'chev', size: 18, color: AppColors.ink2),
-          ],
-        ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: verified ? AppColors.onlineCyan : AppColors.card,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                if (verified)
+                  SvgPicture.string(
+                    _checkSvg,
+                    width: 12,
+                    height: 12,
+                    colorFilter: const ColorFilter.mode(
+                      AppColors.ink,
+                      BlendMode.srcIn,
+                    ),
+                    excludeFromSemantics: true,
+                  ),
+                const SizedBox(width: 4),
+                Text(
+                  verified ? 'Verified' : 'Not verified',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    height: 16 / 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.ink,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          const AppIcon(name: 'chev', size: 18, color: AppColors.ink2),
+        ],
       ),
     );
   }
@@ -393,8 +471,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           children: <Widget>[
             _Row(
               label: 'Birthday',
-              value: '12 Mar 2004',
-              onTap: () => _snack('Coming soon'),
+              value: _birthday == null
+                  ? '12 Mar 2004'
+                  : DateFormat('d MMM yyyy').format(_birthday!),
+              onTap: _pickBirthday,
             ),
             const Padding(
               padding: EdgeInsets.fromLTRB(8, 6, 8, 0),
@@ -439,11 +519,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           label: 'Gender',
           value: _gender,
           onTap: () => _openSheet('gender'),
-        ),
-        _Row(
-          label: 'Interests',
-          value: interestsValue(_interests),
-          onTap: () => _openSheet('interests'),
         ),
       ],
     );
@@ -538,9 +613,10 @@ const List<Color> _tileTints = <Color>[
 ];
 
 class _PhotoTile extends StatelessWidget {
-  const _PhotoTile({required this.index, required this.onRemove});
+  const _PhotoTile({required this.index, this.bytes, required this.onRemove});
 
   final int index;
+  final Uint8List? bytes;
   final VoidCallback onRemove;
 
   @override
@@ -555,7 +631,16 @@ class _PhotoTile extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: <Widget>[
-          Positioned.fill(child: CustomPaint(painter: _PhotoArtPainter())),
+          if (bytes != null)
+            Positioned.fill(
+              child: Image.memory(
+                bytes!,
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+              ),
+            )
+          else
+            Positioned.fill(child: CustomPaint(painter: _PhotoArtPainter())),
           Positioned(
             top: 0,
             right: 0,
@@ -880,127 +965,6 @@ class _GenderSheet extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _InterestsSheet extends StatefulWidget {
-  const _InterestsSheet({required this.draft, required this.onSave});
-
-  final List<String> draft;
-  final ValueChanged<List<String>> onSave;
-
-  @override
-  State<_InterestsSheet> createState() => _InterestsSheetState();
-}
-
-class _InterestsSheetState extends State<_InterestsSheet> {
-  late final List<String> _draft = List<String>.of(widget.draft);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        const Text(
-          'Interests',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 18,
-            height: 28 / 18,
-            fontWeight: FontWeight.w600,
-            color: AppColors.ink,
-          ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Pick what you like talking about.',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            height: 20 / 14,
-            color: AppColors.sub,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: <Widget>[
-            for (final String interest in kInterests)
-              _InterestChip(
-                label: interest,
-                selected: _draft.contains(interest),
-                onTap: () => setState(() {
-                  if (_draft.contains(interest)) {
-                    _draft.remove(interest);
-                  } else {
-                    _draft.add(interest);
-                  }
-                }),
-              ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        NeoButton('Save changes', onPressed: () => widget.onSave(_draft)),
-      ],
-    );
-  }
-}
-
-class _InterestChip extends StatelessWidget {
-  const _InterestChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        height: 48,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.white,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.divider,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            if (selected)
-              SvgPicture.string(
-                _checkSvg,
-                width: 14,
-                height: 14,
-                colorFilter: const ColorFilter.mode(
-                  AppColors.white,
-                  BlendMode.srcIn,
-                ),
-                excludeFromSemantics: true,
-              ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                height: 20 / 14,
-                fontWeight: FontWeight.w500,
-                color: selected ? AppColors.white : AppColors.ink,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
