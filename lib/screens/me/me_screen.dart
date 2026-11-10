@@ -6,11 +6,14 @@ import 'package:provider/provider.dart';
 import '../../foundation/app_icons.dart';
 import '../../foundation/app_motion.dart';
 import '../../foundation/app_theme.dart';
+import '../../features/wallet/domain.dart';
+import '../../features/wallet/widgets.dart';
 import '../../navigation/nav.dart';
 import '../../shared/coin.dart';
 import '../../shared/flag.dart';
 import '../../shared/frog_avatar.dart';
 import '../../shared/lv_chip.dart';
+import '../../shared/v2.dart';
 import '../../state/app_context.dart';
 import 'glass_card.dart';
 
@@ -24,6 +27,15 @@ class MeScreen extends StatefulWidget {
 }
 
 class _MeScreenState extends State<MeScreen> {
+  /// "Coming soon" snackbar at bottom = nav height + 12.
+  void _soon() {
+    AppSnack.show(
+      context,
+      'Coming soon',
+      bottom: 56 + MediaQuery.paddingOf(context).bottom + 12,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final NavigationState navigation = context.read<NavigationState>();
@@ -48,8 +60,9 @@ class _MeScreenState extends State<MeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    _CardsGrid(app: app, navigation: navigation),
-                    _MenuPanel(navigation: navigation),
+                    _CardsGrid(app: app, navigation: navigation, onSoon: _soon),
+                    _WalletSection(navigation: navigation),
+                    _MenuPanel(navigation: navigation, onSoon: _soon),
                   ],
                 ),
               ),
@@ -210,17 +223,36 @@ class _GradientHeader extends StatelessWidget {
               ),
             ),
             Positioned(
-              top: 50,
-              right: 12,
+              top: 46,
+              right: 60,
               child: AppTap(
                 label: 'Edit profile',
                 onTap: onEdit,
                 child: const SizedBox(
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   child: Center(
                     child: AppIcon(
                       name: 'edit',
+                      size: 24,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 46,
+              right: 8,
+              child: AppTap(
+                label: 'App settings',
+                onTap: () => navigation.push('settings'),
+                child: const SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Center(
+                    child: AppIcon(
+                      name: 'gear',
                       size: 24,
                       color: AppColors.ink,
                     ),
@@ -356,10 +388,15 @@ class _Panel extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _CardsGrid extends StatelessWidget {
-  const _CardsGrid({required this.app, required this.navigation});
+  const _CardsGrid({
+    required this.app,
+    required this.navigation,
+    required this.onSoon,
+  });
 
   final AppContextState app;
   final NavigationState navigation;
+  final VoidCallback onSoon;
 
   @override
   Widget build(BuildContext context) {
@@ -470,6 +507,7 @@ class _CardsGrid extends StatelessWidget {
                       tone: GlassTone.vip,
                       height: 71,
                       peek: 14,
+                      onTap: onSoon,
                       decoration: Positioned(
                         top: 12,
                         right: 8,
@@ -530,6 +568,7 @@ class _CardsGrid extends StatelessWidget {
                       tone: GlassTone.invite,
                       height: 71,
                       peek: 14,
+                      onTap: onSoon,
                       decoration: Positioned(
                         right: 8,
                         bottom: 8,
@@ -598,13 +637,119 @@ class _CardsGrid extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Menu panel
+// Wallet and rewards section (v2_07)
+// ---------------------------------------------------------------------------
+
+class _WalletSection extends StatelessWidget {
+  const _WalletSection({required this.navigation});
+
+  final NavigationState navigation;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        const Padding(
+          padding: EdgeInsets.fromLTRB(8, 0, 8, 8),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Wallet and rewards',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                height: 20 / 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.sub,
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                border: Border.all(color: AppColors.divider),
+              ),
+              child: Column(
+                children: <Widget>[
+                  _MenuRow(
+                    key: const ValueKey('wallet-get-tokens'),
+                    tall: true,
+                    icon: TokenCoin(size: 24),
+                    label: 'Get tokens',
+                    trail: Text(
+                      '${const WalletRepository().balance}',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        height: 20 / 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                    onTap: () => navigation.push('tokens'),
+                  ),
+                  Container(height: 1, color: AppColors.divider),
+                  _MenuRow(
+                    key: const ValueKey('wallet-token-history'),
+                    tall: true,
+                    icon: const AppIcon(
+                      name: 'history',
+                      size: 24,
+                      color: AppColors.ink,
+                    ),
+                    label: 'Token history',
+                    onTap: () => navigation.push('token-history'),
+                  ),
+                  Container(height: 1, color: AppColors.divider),
+                  _MenuRow(
+                    key: const ValueKey('wallet-my-items'),
+                    tall: true,
+                    icon: const AppIcon(
+                      name: 'bag',
+                      size: 24,
+                      color: AppColors.ink,
+                    ),
+                    label: 'My items',
+                    onTap: () => navigation.push('package-props'),
+                  ),
+                  Container(height: 1, color: AppColors.divider),
+                  _MenuRow(
+                    key: const ValueKey('wallet-level'),
+                    tall: true,
+                    icon: const AppIcon(
+                      name: 'diamond',
+                      size: 24,
+                      color: AppColors.ink,
+                    ),
+                    label: 'Level',
+                    trail: const LvChip(level: 0, gray: true),
+                    onTap: () => navigation.push('level'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Menu panel (white list)
 // ---------------------------------------------------------------------------
 
 class _MenuPanel extends StatelessWidget {
-  const _MenuPanel({required this.navigation});
+  const _MenuPanel({required this.navigation, required this.onSoon});
 
   final NavigationState navigation;
+  final VoidCallback onSoon;
 
   @override
   Widget build(BuildContext context) {
@@ -618,31 +763,24 @@ class _MenuPanel extends StatelessWidget {
       child: Column(
         children: <Widget>[
           _MenuRow(
-            icon: 'clipboard',
+            icon: const AppIcon(
+              name: 'clipboard',
+              size: 24,
+              color: AppColors.ink,
+            ),
             label: 'Daily Bonus',
             dot: true,
             onTap: () => navigation.push('bonus'),
           ),
           _MenuRow(
-            icon: 'bag',
-            label: 'Package',
-            onTap: () => navigation.push('package-props'),
-          ),
-          _MenuRow(
-            icon: 'diamond',
-            label: 'My Level',
-            trail: LvChip(level: 0, gray: true),
-            onTap: () => navigation.push('level'),
-          ),
-          _MenuRow(
-            icon: 'dollar',
+            icon: const AppIcon(name: 'dollar', size: 24, color: AppColors.ink),
             label: 'Credits',
-            trail: _CreditsTrail(),
-            onTap: () => navigation.push('token-history'),
+            trail: const _CreditsTrail(),
+            onTap: onSoon,
           ),
           _MenuRow(
-            icon: 'gear',
-            label: 'App Settings',
+            icon: const AppIcon(name: 'gear', size: 24, color: AppColors.ink),
+            label: 'App settings',
             onTap: () => navigation.push('settings'),
           ),
         ],
@@ -653,18 +791,21 @@ class _MenuPanel extends StatelessWidget {
 
 class _MenuRow extends StatelessWidget {
   const _MenuRow({
+    super.key,
     required this.icon,
     required this.label,
     this.dot = false,
     this.trail,
     this.onTap,
+    this.tall = false,
   });
 
-  final String icon;
+  final Widget icon;
   final String label;
   final bool dot;
   final Widget? trail;
   final VoidCallback? onTap;
+  final bool tall;
 
   @override
   Widget build(BuildContext context) {
@@ -672,12 +813,12 @@ class _MenuRow extends StatelessWidget {
       onTap: onTap,
       enabled: onTap != null,
       child: SizedBox(
-        height: 48,
+        height: tall ? 56 : 48,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: <Widget>[
-              AppIcon(name: icon, size: 24, color: AppColors.ink),
+              icon,
               const SizedBox(width: 12),
               Expanded(
                 child: Row(

@@ -92,38 +92,52 @@ void main() {
   });
 
   group('Get Tokens', () {
-    testWidgets('renders balance, banner and pack cards; back returns', (
+    testWidgets('renders balance, cards and grid; back returns', (
       tester,
     ) async {
       await pumpApp(tester);
       await tester.tap(find.byType(TokenPill));
       await tester.pumpAndSettle();
-      expect(find.text('Get Tokens'), findsOneWidget);
-      expect(find.text('Limited offer'), findsOneWidget);
-      expect(find.text('₹163'), findsOneWidget);
-      expect(find.text('₹8400'), findsOneWidget);
-      expect(find.text('10% OFF'), findsOneWidget);
+      expect(find.text('Get tokens'), findsOneWidget);
+      expect(find.text('105'), findsOneWidget);
+      expect(find.text('1 token = ₹1'), findsOneWidget);
+      for (final String label in <String>[
+        '100 tokens',
+        '500 tokens',
+        '1,000 tokens',
+        '5,000 tokens',
+        '8,000 tokens',
+        '10,000 tokens',
+      ]) {
+        expect(find.text(label), findsOneWidget);
+      }
+      expect(find.text('Choose an amount'), findsOneWidget);
       await back(tester);
       expect(navOf(tester).screen, 'live');
     });
 
-    testWidgets('pay sheet opens from a price button and closes', (
+    testWidgets('select card, confirm pay, snackbar; balance unchanged', (
       tester,
     ) async {
       await pumpApp(tester);
       await tester.tap(find.byType(TokenPill));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('₹163'));
-      await tester.pumpAndSettle();
-      expect(find.text('Payment method'), findsOneWidget);
-      expect(find.text('UPI'), findsOneWidget);
-      expect(find.text('Card'), findsOneWidget);
-      expect(find.text('Wallet'), findsOneWidget);
-      await tester.tap(find.text('Card'));
+      await tester.tap(find.text('1,000 tokens'));
       await tester.pump();
-      await tester.tap(find.text('Pay ₹163'));
+      expect(find.text('Get 1,000 tokens · ₹1,000'), findsOneWidget);
+      expect(find.text('No extra fees. Tokens don’t expire.'), findsOneWidget);
+      await tester.tap(find.text('Get 1,000 tokens · ₹1,000'));
       await tester.pumpAndSettle();
-      expect(find.text('Payment method'), findsNothing);
+      expect(find.text('Confirm purchase'), findsOneWidget);
+      expect(find.text('Tokens'), findsOneWidget);
+      expect(find.text('Price'), findsOneWidget);
+      expect(find.text('Total'), findsOneWidget);
+      await tester.tap(find.text('Pay ₹1,000'));
+      await tester.pumpAndSettle();
+      expect(find.text('Confirm purchase'), findsNothing);
+      expect(find.text('Payments arrive after the demo'), findsOneWidget);
+      expect(find.text('105'), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 2500));
     });
   });
 

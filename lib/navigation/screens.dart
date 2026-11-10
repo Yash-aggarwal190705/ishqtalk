@@ -114,7 +114,10 @@ Widget _profileBuilder(BuildContext context, ScreenDef definition) =>
     UserProfileScreen(user: context.read<NavigationState>().user);
 
 Widget _tokensBuilder(BuildContext context, ScreenDef definition) =>
-    const TokensScreen();
+    TokensScreen(
+      initialSelected: definition.props['initialSelected'] as int?,
+      initialSheet: definition.props['initialSheet'] as String?,
+    );
 
 Widget _bonusBuilder(BuildContext context, ScreenDef definition) =>
     const BonusScreen();

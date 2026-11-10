@@ -151,7 +151,12 @@ void main() {
 
     testWidgets('Me -> App Settings -> back -> Me', (tester) async {
       await pumpApp(tester, initialScreen: 'me');
-      await tester.tap(find.text('App Settings'));
+      await tester.scrollUntilVisible(
+        find.text('App settings'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('App settings'));
       await tester.pumpAndSettle();
       expect(navOf(tester).screen, 'settings');
       await back(tester);
