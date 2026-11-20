@@ -13,6 +13,7 @@ import '../screens/messages/messages_screen.dart';
 import '../shared/bottom_nav.dart';
 import '../state/app_context.dart';
 import '../state/onboarding_state.dart';
+import '../features/auth/presentation/auth_state.dart';
 import 'nav.dart';
 import 'screens.dart';
 
@@ -43,14 +44,36 @@ class _AppShellState extends State<AppShell> {
     // to 'splash' re-arms it; the initial state is armed on first build.
   }
 
-  void _advanceSplash() {
+  Future<void> _advanceSplash() async {
     _splashTimer = null;
     if (!mounted) return;
     final NavigationState navigation = context.read<NavigationState>();
     if (navigation.screen != 'splash') return;
+
+    // A real Supabase session skips the login screen. The session restore is
+    // async, so wait briefly (max ~2s) for it to settle first.
+    final AuthState auth = context.read<AuthState>();
+    int waited = 0;
+    while (mounted &&
+        (auth.status == AuthStatus.initial ||
+            auth.status == AuthStatus.loading) &&
+        waited < 40) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      waited++;
+    }
+    if (!mounted) return;
+    if (auth.isAuthenticated) {
+      navigation.goto('live');
+      if (kDebugMode || kProfileMode) {
+        debugPrint('[STARTUP] splash -> live (authenticated)');
+      }
+      return;
+    }
+
     final bool onboarded = context.read<OnboardingState>().onboarded;
     final bool hasProfile = context.read<AppContextState>().hasProfile;
     navigation.goto(onboarded || hasProfile ? 'live' : 'login');
+
     if (kDebugMode || kProfileMode) {
       debugPrint(
         '[STARTUP] splash -> ${onboarded || hasProfile ? 'live' : 'login'}',

@@ -8,6 +8,8 @@ import 'navigation/app_shell.dart';
 import 'navigation/nav.dart';
 import 'state/app_context.dart';
 import 'state/onboarding_state.dart';
+import 'features/auth/presentation/auth_state.dart';
+import 'features/auth/data/supabase_auth_repository.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({
@@ -27,6 +29,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MultiProvider(
     providers: [
+      ChangeNotifierProvider(
+        create: (_) => AuthState(
+          repository: SupabaseAuthRepository(),
+        )..initialize(),
+      ),
       ChangeNotifierProvider(
         create: (_) => AppContextState(preferences: preferences),
       ),

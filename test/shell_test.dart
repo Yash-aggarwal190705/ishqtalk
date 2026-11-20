@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ishqtalk/features/auth/data/local_auth_repository.dart';
+import 'package:ishqtalk/features/auth/presentation/auth_state.dart';
 import 'package:ishqtalk/navigation/app_shell.dart';
 import 'package:ishqtalk/navigation/nav.dart';
 import 'package:ishqtalk/screens/explore/explore_screen.dart';
@@ -33,6 +35,7 @@ void main() {
             app: app,
             onboarding: state,
             navigation: nav,
+            auth: AuthState(repository: LocalAuthRepository()),
             child: const AppShell(),
           ),
         );
@@ -46,7 +49,9 @@ void main() {
         } else {
           expect(find.byType(Splash), findsNothing);
         }
-        await tester.pump(const Duration(milliseconds: 1100)); // flush tab load timers
+        await tester.pump(
+          const Duration(milliseconds: 1100),
+        ); // flush tab load timers
         await tester.pumpAndSettle();
         await tester.pumpWidget(const SizedBox.shrink());
         nav.dispose();
@@ -72,7 +77,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.pump(const Duration(milliseconds: 1100)); // flush tab load timers
+      await tester.pump(
+        const Duration(milliseconds: 1100),
+      ); // flush tab load timers
       await tester.pumpAndSettle();
       expect(find.byType(ExploreScreen, skipOffstage: false), findsOneWidget);
       expect(find.byType(LiveScreen, skipOffstage: false), findsOneWidget);
@@ -112,7 +119,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.pump(const Duration(milliseconds: 1100)); // flush tab load timers
+    await tester.pump(
+      const Duration(milliseconds: 1100),
+    ); // flush tab load timers
     await tester.pumpAndSettle();
     final Finder scopeFinder = find.byWidgetPredicate(
       (w) => w.runtimeType.toString().contains('PopScope'),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ishqtalk/features/auth/data/local_auth_repository.dart';
+import 'package:ishqtalk/features/auth/presentation/auth_state.dart';
 import 'package:ishqtalk/navigation/nav.dart';
 import 'package:ishqtalk/screens/onboarding/account_chooser.dart';
 import 'package:ishqtalk/screens/onboarding/contact_sheet.dart';
@@ -39,11 +41,14 @@ Future<NavigationState> mount(
   usePortViewport(tester);
   final app = AppContextState();
   final nav = NavigationState(app: app, screen: 'login');
+  final auth = AuthState(repository: LocalAuthRepository());
   addTearDown(nav.dispose);
   addTearDown(app.dispose);
+  addTearDown(auth.dispose);
   await tester.pumpWidget(
     PortFixture(
       navigation: nav,
+      auth: auth,
       child: Login(modal: modal, expanded: expanded, instant: instant),
     ),
   );

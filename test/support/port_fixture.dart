@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'package:ishqtalk/features/auth/presentation/auth_state.dart';
 import 'package:ishqtalk/foundation/app_motion.dart';
 import 'package:ishqtalk/foundation/app_theme.dart';
 import 'package:ishqtalk/navigation/nav.dart';
@@ -34,6 +35,7 @@ class PortFixture extends StatelessWidget {
     this.app,
     this.onboarding,
     this.navigation,
+    this.auth,
     this.freezeLoops = true,
     this.reducedMotion = false,
     this.padding = EdgeInsets.zero,
@@ -45,6 +47,7 @@ class PortFixture extends StatelessWidget {
   final AppContextState? app;
   final OnboardingState? onboarding;
   final NavigationState? navigation;
+  final AuthState? auth;
   final bool freezeLoops;
   final bool reducedMotion;
   final EdgeInsets padding;
@@ -58,6 +61,7 @@ class PortFixture extends StatelessWidget {
       if (app != null) ChangeNotifierProvider.value(value: app!),
       if (onboarding != null) ChangeNotifierProvider.value(value: onboarding!),
       if (navigation != null) ChangeNotifierProvider.value(value: navigation!),
+      if (auth != null) ChangeNotifierProvider.value(value: auth!),
       Provider.value(value: 'fixture'),
     ],
     child: MaterialApp(

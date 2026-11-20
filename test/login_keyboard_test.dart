@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ishqtalk/features/auth/data/local_auth_repository.dart';
+import 'package:ishqtalk/features/auth/presentation/auth_state.dart';
 import 'package:ishqtalk/screens/onboarding/login.dart';
 import 'package:ishqtalk/screens/onboarding/login_form_layout.dart';
 import 'package:ishqtalk/screens/onboarding/login_primary_button.dart';
@@ -22,6 +24,7 @@ void main() {
         await tester.pumpWidget(
           PortFixture(
             fontFamilyFallback: loginGoldenFallback,
+            auth: AuthState(repository: LocalAuthRepository()),
             child: Login(modal: modal, instant: true),
           ),
         );

@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/auth/presentation/auth_state.dart';
 import '../../features/settings/settings_repository.dart';
 import '../../foundation/app_icons.dart';
 import '../../foundation/app_motion.dart';
@@ -104,6 +105,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   void _logOut() {
     context.read<OnboardingState>().reset();
     // TODO: sign out from the real auth provider.
+    context.read<AuthState>().logout();
     context.read<NavigationState>().jump('login');
   }
 
@@ -113,6 +115,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     if (!mounted) return;
     context.read<OnboardingState>().reset();
     context.read<AppContextState>().clearLocal();
+    context.read<AuthState>().logout();
     context.read<NavigationState>().jump('splash');
   }
 

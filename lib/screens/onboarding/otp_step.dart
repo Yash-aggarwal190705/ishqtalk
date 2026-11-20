@@ -15,13 +15,21 @@ class OtpStep extends StatefulWidget {
   const OtpStep({
     super.key,
     required this.target,
+    required this.check,
     required this.onVerify,
     required this.onBack,
+    this.showDemoHint = true,
   });
-  static const demoCode = '123456';
+
   final String target;
+
+  /// Returns true when [code] is accepted. Errors surface in the UI.
+  final Future<bool> Function(String code) check;
   final VoidCallback onVerify;
   final VoidCallback onBack;
+
+  /// Demo-only hint (phone flow). Hidden for real email OTP.
+  final bool showDemoHint;
 
   @override
   State<OtpStep> createState() => _OtpStepState();
@@ -102,9 +110,11 @@ class _OtpStepState extends State<OtpStep> {
     }
   }
 
-  void _verify() {
+  Future<void> _verify() async {
     if (_digits.any((d) => d.isEmpty)) return;
-    if (_digits.join() == OtpStep.demoCode) {
+    final bool ok = await widget.check(_digits.join());
+    if (!mounted) return;
+    if (ok) {
       widget.onVerify();
     } else {
       setState(() {
@@ -268,14 +278,15 @@ class _OtpStepState extends State<OtpStep> {
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'Demo code: 123456',
-          style: TextStyle(
-            fontSize: 12,
-            height: 16 / 12,
-            color: AppColors.ink2,
+        if (widget.showDemoHint)
+          const Text(
+            'Demo code: 123456',
+            style: TextStyle(
+              fontSize: 12,
+              height: 16 / 12,
+              color: AppColors.ink2,
+            ),
           ),
-        ),
       ],
     ),
     actions: Column(

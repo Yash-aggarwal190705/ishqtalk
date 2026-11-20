@@ -2,6 +2,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:ishqtalk/features/auth/data/local_auth_repository.dart';
+import 'package:ishqtalk/features/auth/presentation/auth_state.dart';
 import 'package:ishqtalk/foundation/app_icons.dart';
 import 'package:ishqtalk/navigation/nav.dart';
 import 'package:ishqtalk/screens/me/app_settings_screen.dart';
@@ -24,11 +26,13 @@ void main() {
     final AppContextState app = AppContextState();
     final OnboardingState onboarding = OnboardingState();
     final NavigationState nav = NavigationState(app: app, screen: 'settings');
+    final AuthState auth = AuthState(repository: LocalAuthRepository());
     await tester.pumpWidget(
       PortFixture(
         app: app,
         onboarding: onboarding,
         navigation: nav,
+        auth: auth,
         child: AppSettingsScreen(initialSheet: sheet),
       ),
     );

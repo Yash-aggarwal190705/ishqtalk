@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
+import '../../features/auth/presentation/auth_state.dart';
 import '../../foundation/app_icons.dart';
 import '../../foundation/app_motion.dart';
 import '../../foundation/app_theme.dart';
@@ -40,6 +42,7 @@ class _ContactSheetState extends State<ContactSheet> {
   bool _touched = false;
   bool _countries = false;
   String _country = '+91';
+  String _sendError = '';
 
   bool get _isEmail => widget.kind == ContactKind.email;
   bool get _valid => _isEmail
@@ -65,11 +68,24 @@ class _ContactSheetState extends State<ContactSheet> {
     if (!_inputFocus.hasFocus) setState(() => _touched = true);
   }
 
-  void _send() {
+  Future<void> _send() async {
     setState(() {
       _touched = true;
-      if (_valid) _otp = true;
+      _sendError = '';
     });
+    if (!_valid) return;
+    if (_isEmail) {
+      // Real Supabase email OTP: send the code before showing the OTP step.
+      final bool ok = await context.read<AuthState>().sendEmailOtp(
+        _email.text.trim(),
+      );
+      if (!mounted) return;
+      if (!ok) {
+        setState(() => _sendError = 'Could not send code. Please try again.');
+        return;
+      }
+    }
+    setState(() => _otp = true);
   }
 
   void _closeCountries([String? value]) {
@@ -165,7 +181,7 @@ class _ContactSheetState extends State<ContactSheet> {
                         FilteringTextInputFormatter.digitsOnly,
                         LengthLimitingTextInputFormatter(12),
                       ],
-                onChanged: (_) => setState(() {}),
+                onChanged: (_) => setState(() => _sendError = ''),
                 onSubmitted: (_) => _send(),
               ),
             ),
@@ -177,7 +193,7 @@ class _ContactSheetState extends State<ContactSheet> {
           child: Semantics(
             liveRegion: true,
             child: Text(
-              _error,
+              _sendError.isNotEmpty ? _sendError : _error,
               style: const TextStyle(
                 fontSize: 12,
                 height: 16 / 12,
@@ -213,6 +229,13 @@ class _ContactSheetState extends State<ContactSheet> {
             child: _otp
                 ? OtpStep(
                     target: _target,
+                    check: _isEmail
+                        ? (code) => context.read<AuthState>().verifyEmailOtp(
+                            _email.text.trim(),
+                            code,
+                          )
+                        : (code) async => code == '123456',
+                    showDemoHint: !_isEmail,
                     onVerify: widget.done,
                     onBack: () => setState(() => _otp = false),
                   )
