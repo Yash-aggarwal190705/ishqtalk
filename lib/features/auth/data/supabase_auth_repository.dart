@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/auth_models.dart';
@@ -180,23 +181,36 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<AuthResult<void>> sendEmailOtp(String email) async {
+    final String clean = email.trim().toLowerCase();
     try {
-      // Sends a sign-in email OTP (project must have the email OTP
-      // template enabled). No prior session is required.
-      await _c.auth.signInWithOtp(email: email);
+      // Sends a sign-in email OTP. `shouldCreateUser: true` lets new users
+      // receive a code; `emailRedirectTo` is intentionally unset so the
+      // project's default Site URL is used (no redirect allow-list needed).
+      await _c.auth.signInWithOtp(email: clean, shouldCreateUser: true);
       return const AuthResult.success(null);
     } on AuthException catch (e) {
+      // Keep the raw message so the UI can show the real reason; also log
+      // the full details for diagnosis (rate limits, template errors, ...).
+      if (kDebugMode) {
+        debugPrint(
+          '[AUTH] sendEmailOtp failed: ${e.message} '
+          '(status=${e.statusCode}, code=${e.code})',
+        );
+      }
       return AuthResult.failure(
         AuthError(
-          code: e.statusCode ?? 'otp_error',
-          message: _getErrorMessage(e.message),
+          code: e.code ?? e.statusCode ?? 'otp_error',
+          message: e.message,
         ),
       );
     } catch (e) {
-      return const AuthResult.failure(
+      if (kDebugMode) {
+        debugPrint('[AUTH] sendEmailOtp threw: $e');
+      }
+      return AuthResult.failure(
         AuthError(
-          code: 'unknown_error',
-          message: 'An unexpected error occurred',
+          code: 'network_error',
+          message: 'No internet connection. Please check your network.',
         ),
       );
     }

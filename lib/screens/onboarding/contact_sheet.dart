@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -43,6 +45,9 @@ class _ContactSheetState extends State<ContactSheet> {
   bool _countries = false;
   String _country = '+91';
   String _sendError = '';
+  bool _sending = false;
+  int _cooldown = 0;
+  Timer? _cooldownTimer;
 
   bool get _isEmail => widget.kind == ContactKind.email;
   bool get _valid => _isEmail
@@ -68,23 +73,63 @@ class _ContactSheetState extends State<ContactSheet> {
     if (!_inputFocus.hasFocus) setState(() => _touched = true);
   }
 
+  void _startCooldown() {
+    _cooldownTimer?.cancel();
+    setState(() => _cooldown = 60);
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _cooldown--;
+        if (_cooldown <= 0) timer.cancel();
+      });
+    });
+  }
+
+  String _mapSendError(String? code, String? message) {
+    switch (code) {
+      case 'over_email_send_rate_limit':
+      case 'over_request_rate_limit':
+        return 'Too many attempts. Please wait a minute and try again.';
+      case 'email_provider_disabled':
+        return 'Email sign-in is currently disabled.';
+      case 'signup_disabled':
+        return 'Signups are currently disabled.';
+      case 'network_error':
+        return 'No internet connection. Check your network.';
+    }
+    if (message != null && message.isNotEmpty) return message;
+    return 'Could not send code. Please try again.';
+  }
+
   Future<void> _send() async {
+    if (_sending || _cooldown > 0) return;
     setState(() {
       _touched = true;
       _sendError = '';
+      _sending = true;
     });
-    if (!_valid) return;
+    if (!_valid) {
+      setState(() => _sending = false);
+      return;
+    }
     if (_isEmail) {
       // Real Supabase email OTP: send the code before showing the OTP step.
-      final bool ok = await context.read<AuthState>().sendEmailOtp(
-        _email.text.trim(),
-      );
+      final AuthState auth = context.read<AuthState>();
+      final bool ok = await auth.sendEmailOtp(_email.text.trim().toLowerCase());
       if (!mounted) return;
       if (!ok) {
-        setState(() => _sendError = 'Could not send code. Please try again.');
+        setState(() {
+          _sending = false;
+          _sendError = _mapSendError(auth.error?.code, auth.error?.message);
+        });
         return;
       }
     }
+    setState(() => _sending = false);
+    _startCooldown();
     setState(() => _otp = true);
   }
 
@@ -98,6 +143,7 @@ class _ContactSheetState extends State<ContactSheet> {
 
   @override
   void dispose() {
+    _cooldownTimer?.cancel();
     _inputFocus.removeListener(_focusChanged);
     _inputFocus.dispose();
     _email.dispose();
@@ -207,8 +253,9 @@ class _ContactSheetState extends State<ContactSheet> {
     actions: Padding(
       padding: const EdgeInsets.only(top: 12),
       child: LoginPrimaryButton(
-        label: 'Send code',
-        onTap: _valid ? _send : null,
+        label: _cooldown > 0 ? 'Resend code in ${_cooldown}s' : 'Send code',
+        loading: _sending,
+        onTap: !_sending && _cooldown == 0 && _valid ? _send : null,
       ),
     ),
   );

@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ishqtalk/features/auth/data/local_auth_repository.dart';
+import 'package:ishqtalk/features/auth/domain/auth_models.dart';
 import 'package:ishqtalk/features/auth/presentation/auth_state.dart';
 import 'package:ishqtalk/navigation/nav.dart';
 import 'package:ishqtalk/screens/onboarding/account_chooser.dart';
@@ -17,6 +18,19 @@ import 'package:ishqtalk/screens/onboarding/provider_button.dart';
 import 'package:ishqtalk/state/app_context.dart';
 
 import 'support/port_fixture.dart';
+
+/// Repository that always fails to send with the Supabase rate-limit code.
+class _RateLimitedAuthRepository extends LocalAuthRepository {
+  @override
+  Future<AuthResult<void>> sendEmailOtp(String email) async {
+    return const AuthResult.failure(
+      AuthError(
+        code: 'over_email_send_rate_limit',
+        message: 'Rate limit exceeded',
+      ),
+    );
+  }
+}
 
 Finder field(String key) => find.descendant(
   of: find.byKey(ValueKey(key)),
@@ -343,6 +357,59 @@ void main() {
     await tester.pump();
     expect(find.text('Resend code in 30s'), findsOneWidget);
     expect(code(tester), '321');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('send code starts a 60s resend cooldown after Change', (
+    tester,
+  ) async {
+    await mount(tester, modal: 'email');
+    await tester.enterText(field('email-input'), 'alex@example.com');
+    await tester.pump();
+    await tester.tap(find.text('Send code'));
+    await tester.pumpAndSettle(const Duration(milliseconds: 10));
+    expect(find.byType(OtpStep), findsOneWidget);
+    await tapSpan(tester, 'Change');
+    await tester.pump();
+    expect(find.text('Resend code in 60s'), findsOneWidget);
+    expect(
+      tester.widget<LoginPrimaryButton>(find.byType(LoginPrimaryButton)).onTap,
+      isNull,
+    );
+    await tester.pump(const Duration(seconds: 59));
+    expect(find.text('Resend code in 1s'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Send code'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('send failure maps Supabase rate-limit error to friendly text', (
+    tester,
+  ) async {
+    usePortViewport(tester);
+    final app = AppContextState();
+    final nav = NavigationState(app: app, screen: 'login');
+    final auth = AuthState(repository: _RateLimitedAuthRepository());
+    addTearDown(nav.dispose);
+    addTearDown(app.dispose);
+    addTearDown(auth.dispose);
+    await tester.pumpWidget(
+      PortFixture(
+        navigation: nav,
+        auth: auth,
+        child: const Login(modal: 'email', instant: true),
+      ),
+    );
+    await tester.pumpAndSettle(const Duration(milliseconds: 10));
+    await tester.enterText(field('email-input'), 'alex@example.com');
+    await tester.pump();
+    await tester.tap(find.text('Send code'));
+    await tester.pumpAndSettle(const Duration(milliseconds: 10));
+    expect(
+      find.text('Too many attempts. Please wait a minute and try again.'),
+      findsOneWidget,
+    );
+    expect(find.byType(OtpStep), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
