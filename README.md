@@ -1,5 +1,7 @@
 # ishqtalk
 
+*A friendship app where you can make friends worldwide on video call.*
+
 ## React → Flutter port
 
 Foundation, Splash, Login (including account/contact/OTP/legal modals), and the
